@@ -249,8 +249,9 @@ function buildSparkPath(values: number[], width = 160, height = 80) {
 
 function sparkStats(values: number[]) {
     if (!values.length) return { latest: 0, delta: 0 };
-    const latest = values[values.length - 1];
-    const delta = latest - values[0];
+    const first = values[0] ?? 0;
+    const latest = values[values.length - 1] ?? first;
+    const delta = latest - first;
     return { latest, delta };
 }
 
