@@ -69,6 +69,8 @@ const showFeeModal = ref(false);
 const showTradeModal = ref(false);
 const selectedChartItem = ref("");
 const selectedListItem = ref("");
+const showCharts = ref(true);
+const showTrades = ref(true);
 const globalBuyFeePct = ref(1);
 const globalSellFeePct = ref(2);
 const showSuggestions = ref(false);
@@ -1126,7 +1128,7 @@ function formatUnits(value: number) {
 
         <section class="panel charts">
             <div class="panel__header">
-                <div>
+                <div class="panel__header__title" @click="showCharts = !showCharts">
                     <p class="eyebrow">Insights</p>
                     <h2>Graficos rapidos</h2>
                 </div>
@@ -1139,7 +1141,7 @@ function formatUnits(value: number) {
                     </select>
                 </div>
             </div>
-            <div class="panel__body">
+            <div v-if="showCharts" class="panel__body">
                 <p v-if="trades.length === 0" class="helper">
                     Cadastre ordens para visualizar historico e tendencias.
                 </p>
@@ -1310,7 +1312,7 @@ function formatUnits(value: number) {
 
         <section class="panel trades">
             <div class="panel__header">
-                <div>
+                <div class="panel__header__title" @click="showTrades = !showTrades">
                     <p class="eyebrow">Ordens</p>
                     <h2>Histórico</h2>
                 </div>
@@ -1323,7 +1325,7 @@ function formatUnits(value: number) {
                     </select>
                 </div>
             </div>
-            <div class="panel__body">
+            <div v-if="showTrades" class="panel__body">
                 <p v-if="loading">Carregando...</p>
                 <p v-else-if="trades.length === 0">Nenhuma ordem cadastrada.</p>
                 <div v-else-if="filteredListTrades.length === 0" class="helper">
@@ -1554,6 +1556,11 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
+}
+
+.panel__header__title {
+    cursor: pointer;
+    user-select: none;
 }
 
 .panel__actions {
