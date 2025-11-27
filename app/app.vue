@@ -867,7 +867,7 @@ function formatUnits(value: number) {
         <header class="hero">
             <div class="hero__left">
                 <p class="eyebrow">
-                    <img class="logo-mark" src="/tmd-logo.svg" alt="TMD" />
+                    <img class="logo-mark" src="/logo.png" alt="TMD" />
                     Tibia Market Desk
                 </p>
                 <!-- <h1>Ordens de compra, venda e undercut</h1>
@@ -1690,7 +1690,6 @@ body {
 .logo-mark {
     width: 40px;
     height: 40px;
-    box-shadow: 0 10px 30px rgba(14, 165, 233, 0.25);
 }
 
 .hero__actions {
@@ -1719,7 +1718,7 @@ body {
     font-weight: 700;
     font-size: 22px;
     color: #ffffff;
-    margin: 0 0 4px;
+    margin: 0 0 0;
 }
 
 .hero__badge {
