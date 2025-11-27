@@ -68,6 +68,7 @@ const editingTradeId = ref<number | null>(null);
 const showFeeModal = ref(false);
 const showTradeModal = ref(false);
 const selectedChartItem = ref("");
+const selectedListItem = ref("");
 const globalBuyFeePct = ref(1);
 const globalSellFeePct = ref(2);
 const showSuggestions = ref(false);
@@ -78,6 +79,12 @@ let hideSuggestionsTimeout: number | null = null;
 const filteredTrades = computed(() => {
     if (!selectedChartItem.value) return trades.value;
     const needle = selectedChartItem.value.toLowerCase();
+    return trades.value.filter((trade) => trade.item.toLowerCase() === needle);
+});
+
+const filteredListTrades = computed(() => {
+    if (!selectedListItem.value) return trades.value;
+    const needle = selectedListItem.value.toLowerCase();
     return trades.value.filter((trade) => trade.item.toLowerCase() === needle);
 });
 
@@ -449,6 +456,16 @@ watch(items, () => {
     );
     if (!exists) {
         selectedChartItem.value = "";
+    }
+});
+
+watch(items, () => {
+    if (!selectedListItem.value) return;
+    const exists = items.value.some(
+        (name) => name.toLowerCase() === selectedListItem.value.toLowerCase(),
+    );
+    if (!exists) {
+        selectedListItem.value = "";
     }
 });
 
@@ -1122,6 +1139,14 @@ function formatUnits(value: number) {
                     </select>
                 </div>
             </div>
+            <div class="panel__actions">
+                <select v-model="selectedListItem">
+                    <option value="">Todos os itens</option>
+                    <option v-for="item in items" :key="item" :value="item">
+                        {{ item }}
+                    </option>
+                </select>
+            </div>
             <div class="panel__body">
                 <p v-if="trades.length === 0" class="helper">
                     Cadastre ordens para visualizar historico e tendencias.
@@ -1297,13 +1322,24 @@ function formatUnits(value: number) {
                     <p class="eyebrow">Ordens</p>
                     <h2>Histórico</h2>
                 </div>
+                <div class="panel__actions">
+                    <select v-model="selectedListItem">
+                        <option value="">Todos os itens</option>
+                        <option v-for="item in items" :key="item" :value="item">
+                            {{ item }}
+                        </option>
+                    </select>
+                </div>
             </div>
             <div class="panel__body">
                 <p v-if="loading">Carregando...</p>
                 <p v-else-if="trades.length === 0">Nenhuma ordem cadastrada.</p>
+                <div v-else-if="filteredListTrades.length === 0" class="helper">
+                    Nenhuma ordem para o filtro selecionado.
+                </div>
                 <div v-else class="trade-list">
                     <article
-                        v-for="trade in trades"
+                        v-for="trade in filteredListTrades"
                         :key="trade.id"
                         class="trade-card"
                     >
