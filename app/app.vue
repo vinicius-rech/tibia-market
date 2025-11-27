@@ -78,6 +78,7 @@ const globalSellFeePct = ref(2);
 const showSuggestions = ref(false);
 const highlightedSuggestion = ref(0);
 const SUGGESTION_LIMIT = 8;
+const VISIBILITY_STORAGE_KEY = "tibia-trader-visibility";
 let hideSuggestionsTimeout: number | null = null;
 
 const filteredTrades = computed(() => {
@@ -199,6 +200,7 @@ onMounted(async () => {
         }
 
         hydrateFeesFromStorage();
+        hydrateVisibilityFromStorage();
         await Promise.all([loadTrades(), loadItems()]);
     } catch (err) {
         error.value = err instanceof Error ? err.message : String(err);
@@ -577,11 +579,42 @@ function hydrateFeesFromStorage() {
     }
 }
 
+function hydrateVisibilityFromStorage() {
+    if (typeof window === "undefined") return;
+    const raw = window.localStorage.getItem(VISIBILITY_STORAGE_KEY);
+    if (!raw) return;
+
+    try {
+        const parsed = JSON.parse(raw) as {
+            showCharts?: boolean;
+            showTrades?: boolean;
+        };
+
+        if (typeof parsed.showCharts === "boolean") {
+            showCharts.value = parsed.showCharts;
+        }
+
+        if (typeof parsed.showTrades === "boolean") {
+            showTrades.value = parsed.showTrades;
+        }
+    } catch {
+        // ignore parse errors
+    }
+}
+
 watch([globalBuyFeePct, globalSellFeePct], ([buy, sell]) => {
     if (typeof window === "undefined") return;
     window.localStorage.setItem(
         "tibia-trader-fees",
         JSON.stringify({ buyFeePct: buy, sellFeePct: sell }),
+    );
+});
+
+watch([showCharts, showTrades], ([charts, trades]) => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(
+        VISIBILITY_STORAGE_KEY,
+        JSON.stringify({ showCharts: charts, showTrades: trades }),
     );
 });
 
