@@ -74,6 +74,23 @@ const highlightedSuggestion = ref(0);
 const SUGGESTION_LIMIT = 8;
 let hideSuggestionsTimeout: number | null = null;
 
+const chartSeries = computed(() => {
+    const ordered = trades.value.slice().reverse();
+    const build = (extractor: (trade: Trade) => number) => {
+        if (!ordered.length) return [0];
+        return ordered.map(extractor);
+    };
+
+    return {
+        profit: build((trade) => trade.realProfit),
+        spread: build((trade) => trade.spread),
+        buyValue: build((trade) => trade.buyTradeValue),
+        sellValue: build((trade) => trade.tradeValue),
+        fees: build((trade) => trade.totalFees),
+        units: build((trade) => trade.buyUnits + trade.sellUnits),
+    };
+});
+
 const form = reactive<TradeInput>({
     item: "",
     bid: 0,
@@ -196,6 +213,30 @@ function buildMetrics(
         buyFee,
         sellFee,
     };
+}
+
+function buildSparkPath(values: number[], width = 160, height = 80) {
+    if (!values.length) return "";
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const range = max - min || 1;
+    const step = values.length > 1 ? width / (values.length - 1) : width;
+
+    return values
+        .map((value, index) => {
+            const x = Math.round(index * step);
+            const normalized = (value - min) / range;
+            const y = Math.round(height - normalized * (height - 12) - 6);
+            return `${index === 0 ? "M" : "L"} ${x} ${y}`;
+        })
+        .join(" ");
+}
+
+function sparkStats(values: number[]) {
+    if (!values.length) return { latest: 0, delta: 0 };
+    const latest = values[values.length - 1];
+    const delta = latest - values[0];
+    return { latest, delta };
 }
 
 function scoreItemMatch(name: string, term: string) {
@@ -1146,6 +1187,166 @@ function formatUnits(value: number) {
                 </div>
             </div>
         </section>
+
+        <section class="panel charts">
+            <div class="panel__header">
+                <div>
+                    <p class="eyebrow">Insights</p>
+                    <h2>Graficos rapidos</h2>
+                </div>
+            </div>
+            <div class="panel__body">
+                <p v-if="trades.length === 0" class="helper">
+                    Cadastre ordens para visualizar historico e tendencias.
+                </p>
+                <div v-else class="charts-grid">
+                    <article class="chart-card">
+                        <div class="chart-card__header">
+                            <p>Real profit</p>
+                            <strong>{{ formatGold(sparkStats(chartSeries.profit).latest) }}</strong>
+                            <span
+                                :class="{
+                                    positive: sparkStats(chartSeries.profit).delta >= 0,
+                                    negative: sparkStats(chartSeries.profit).delta < 0,
+                                }"
+                            >
+                                {{ formatGold(sparkStats(chartSeries.profit).delta) }}
+                            </span>
+                        </div>
+                        <svg
+                            class="sparkline"
+                            viewBox="0 0 160 80"
+                            preserveAspectRatio="none"
+                        >
+                            <path
+                                class="sparkline__stroke"
+                                :d="buildSparkPath(chartSeries.profit)"
+                            />
+                        </svg>
+                    </article>
+                    <article class="chart-card">
+                        <div class="chart-card__header">
+                            <p>Spread</p>
+                            <strong>{{ formatGold(sparkStats(chartSeries.spread).latest) }}</strong>
+                            <span
+                                :class="{
+                                    positive: sparkStats(chartSeries.spread).delta >= 0,
+                                    negative: sparkStats(chartSeries.spread).delta < 0,
+                                }"
+                            >
+                                {{ formatGold(sparkStats(chartSeries.spread).delta) }}
+                            </span>
+                        </div>
+                        <svg
+                            class="sparkline"
+                            viewBox="0 0 160 80"
+                            preserveAspectRatio="none"
+                        >
+                            <path
+                                class="sparkline__stroke"
+                                :d="buildSparkPath(chartSeries.spread)"
+                            />
+                        </svg>
+                    </article>
+                    <article class="chart-card">
+                        <div class="chart-card__header">
+                            <p>Valor de compra</p>
+                            <strong>{{ formatGold(sparkStats(chartSeries.buyValue).latest) }}</strong>
+                            <span
+                                :class="{
+                                    positive: sparkStats(chartSeries.buyValue).delta >= 0,
+                                    negative: sparkStats(chartSeries.buyValue).delta < 0,
+                                }"
+                            >
+                                {{ formatGold(sparkStats(chartSeries.buyValue).delta) }}
+                            </span>
+                        </div>
+                        <svg
+                            class="sparkline"
+                            viewBox="0 0 160 80"
+                            preserveAspectRatio="none"
+                        >
+                            <path
+                                class="sparkline__stroke"
+                                :d="buildSparkPath(chartSeries.buyValue)"
+                            />
+                        </svg>
+                    </article>
+                    <article class="chart-card">
+                        <div class="chart-card__header">
+                            <p>Valor de venda</p>
+                            <strong>{{ formatGold(sparkStats(chartSeries.sellValue).latest) }}</strong>
+                            <span
+                                :class="{
+                                    positive: sparkStats(chartSeries.sellValue).delta >= 0,
+                                    negative: sparkStats(chartSeries.sellValue).delta < 0,
+                                }"
+                            >
+                                {{ formatGold(sparkStats(chartSeries.sellValue).delta) }}
+                            </span>
+                        </div>
+                        <svg
+                            class="sparkline"
+                            viewBox="0 0 160 80"
+                            preserveAspectRatio="none"
+                        >
+                            <path
+                                class="sparkline__stroke"
+                                :d="buildSparkPath(chartSeries.sellValue)"
+                            />
+                        </svg>
+                    </article>
+                    <article class="chart-card">
+                        <div class="chart-card__header">
+                            <p>Taxas</p>
+                            <strong>{{ formatGold(sparkStats(chartSeries.fees).latest) }}</strong>
+                            <span
+                                :class="{
+                                    positive: sparkStats(chartSeries.fees).delta >= 0,
+                                    negative: sparkStats(chartSeries.fees).delta < 0,
+                                }"
+                            >
+                                {{ formatGold(sparkStats(chartSeries.fees).delta) }}
+                            </span>
+                        </div>
+                        <svg
+                            class="sparkline"
+                            viewBox="0 0 160 80"
+                            preserveAspectRatio="none"
+                        >
+                            <path
+                                class="sparkline__stroke"
+                                :d="buildSparkPath(chartSeries.fees)"
+                            />
+                        </svg>
+                    </article>
+                    <article class="chart-card">
+                        <div class="chart-card__header">
+                            <p>Unidades totais</p>
+                            <strong>{{ formatUnits(sparkStats(chartSeries.units).latest) }}</strong>
+                            <span
+                                :class="{
+                                    positive: sparkStats(chartSeries.units).delta >= 0,
+                                    negative: sparkStats(chartSeries.units).delta < 0,
+                                }"
+                            >
+                                {{ formatUnits(Math.round(sparkStats(chartSeries.units).delta)) }}
+                            </span>
+                        </div>
+                        <svg
+                            class="sparkline"
+                            viewBox="0 0 160 80"
+                            preserveAspectRatio="none"
+                        >
+                            <path
+                                class="sparkline__stroke"
+                                :d="buildSparkPath(chartSeries.units)"
+                            />
+                        </svg>
+                    </article>
+                </div>
+            </div>
+        </section>
     </div>
 </template>
 
@@ -1549,6 +1750,65 @@ textarea {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 10px;
+}
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+}
+
+.chart-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px;
+    background: #f8fafc;
+    display: grid;
+    gap: 10px;
+}
+
+.chart-card__header {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+}
+
+.chart-card__header p {
+    margin: 0;
+    color: #475569;
+    font-weight: 600;
+}
+
+.chart-card__header strong {
+    color: #0f172a;
+}
+
+.chart-card__header span {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.chart-card__header .positive {
+    color: #16a34a;
+}
+
+.chart-card__header .negative {
+    color: #b91c1c;
+}
+
+.sparkline {
+    width: 100%;
+    height: 80px;
+}
+
+.sparkline__stroke {
+    fill: none;
+    stroke: #0ea5e9;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 .cell {
