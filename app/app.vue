@@ -67,6 +67,7 @@ const items = ref<string[]>([]);
 const editingTradeId = ref<number | null>(null);
 const showFeeModal = ref(false);
 const showTradeModal = ref(false);
+const selectedChartItem = ref("");
 const globalBuyFeePct = ref(1);
 const globalSellFeePct = ref(2);
 const showSuggestions = ref(false);
@@ -74,8 +75,14 @@ const highlightedSuggestion = ref(0);
 const SUGGESTION_LIMIT = 8;
 let hideSuggestionsTimeout: number | null = null;
 
+const filteredTrades = computed(() => {
+    if (!selectedChartItem.value) return trades.value;
+    const needle = selectedChartItem.value.toLowerCase();
+    return trades.value.filter((trade) => trade.item.toLowerCase() === needle);
+});
+
 const chartSeries = computed(() => {
-    const ordered = trades.value.slice().reverse();
+    const ordered = filteredTrades.value.slice().reverse();
     const build = (extractor: (trade: Trade) => number) => {
         if (!ordered.length) return [0];
         const numbers = ordered
@@ -433,6 +440,16 @@ watch([globalBuyFeePct, globalSellFeePct], ([buy, sell]) => {
         "tibia-trader-fees",
         JSON.stringify({ buyFeePct: buy, sellFeePct: sell }),
     );
+});
+
+watch(items, () => {
+    if (!selectedChartItem.value) return;
+    const exists = items.value.some(
+        (name) => name.toLowerCase() === selectedChartItem.value.toLowerCase(),
+    );
+    if (!exists) {
+        selectedChartItem.value = "";
+    }
 });
 
 async function ensureItemExists(name: string) {
@@ -1093,7 +1110,7 @@ function formatUnits(value: number) {
         <section class="panel trades">
             <div class="panel__header">
                 <div>
-                    <h2>Historico</h2>
+                    <h2>Histórico</h2>
                 </div>
             </div>
             <div class="panel__body">
@@ -1138,7 +1155,10 @@ function formatUnits(value: number) {
                         </header>
                         <div class="trade-card__grid">
                             <div class="cell">
-                                <p>Bid / Ask</p>
+                                <p>
+                                    <span style="color: green">Bid</span> /
+                                    <span style="color: red">Ask</span>
+                                </p>
                                 <strong>
                                     {{ formatGold(trade.bid) }} /
                                     {{ formatGold(trade.ask) }}
@@ -1179,16 +1199,6 @@ function formatUnits(value: number) {
                                 >
                             </div>
                             <div class="cell">
-                                <p>Real Profit</p>
-                                <strong>{{
-                                    formatGold(trade.realProfit)
-                                }}</strong>
-                                <span
-                                    >Real:
-                                    {{ formatGold(trade.realProfit) }}</span
-                                >
-                            </div>
-                            <div class="cell">
                                 <p>Registrado</p>
                                 <strong>{{
                                     new Date(trade.createdAt).toLocaleString(
@@ -1196,6 +1206,16 @@ function formatUnits(value: number) {
                                     )
                                 }}</strong>
                                 <span v-if="trade.note">{{ trade.note }}</span>
+                            </div>
+
+                            <div
+                                class="cell"
+                                style="background-color: green; color: #ffffff"
+                            >
+                                <p>Real Profit</p>
+                                <strong>{{
+                                    formatGold(trade.realProfit)
+                                }}</strong>
                             </div>
                         </div>
                     </article>
@@ -1208,6 +1228,14 @@ function formatUnits(value: number) {
                 <div>
                     <p class="eyebrow">Insights</p>
                     <h2>Graficos rapidos</h2>
+                </div>
+                <div class="panel__actions">
+                    <select v-model="selectedChartItem">
+                        <option value="">Todos os itens</option>
+                        <option v-for="item in items" :key="item" :value="item">
+                            {{ item }}
+                        </option>
+                    </select>
                 </div>
             </div>
             <div class="panel__body">
@@ -1411,6 +1439,7 @@ body {
     padding: 8px;
     display: flex;
     align-items: center;
+    margin-bottom: 40px;
     justify-content: space-between;
     gap: 16px;
 }
@@ -1757,6 +1786,12 @@ textarea {
 .trade-card {
     padding: 14px;
     background: #030305;
+    transition: 500ms background;
+}
+
+.trade-card:hover {
+    background: #141013;
+    border-radius: 5px;
 }
 
 .trade-card__header {
