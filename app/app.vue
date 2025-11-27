@@ -510,7 +510,7 @@ async function submitTrade() {
     }
 }
 
-function resetForm(nextItem = "Assassin Dagger") {
+function resetForm(nextItem = "") {
     editingTradeId.value = null;
     form.item = nextItem;
     form.bid = 0;
@@ -713,12 +713,11 @@ function formatUnits(value: number) {
             <section class="panel">
                 <div class="panel__header">
                     <div>
-                        <p class="eyebrow">Nova ordem</p>
                         <h2>
                             {{
                                 editingTradeId
                                     ? `Editando #${editingTradeId}`
-                                    : "Adicionando"
+                                    : "Nova ordem"
                             }}
                         </h2>
                     </div>
@@ -746,7 +745,7 @@ function formatUnits(value: number) {
                     <form class="form" @submit.prevent="submitTrade">
                         <div class="field">
                             <label>Item</label>
-                            <div class="autocomplete">
+                            <div class="autocomplete"">
                                 <input
                                     v-model="form.item"
                                     type="text"
@@ -1113,13 +1112,14 @@ function formatUnits(value: number) {
 body {
     margin: 0;
     padding: 0;
+    position: relative;
 }
 
 .layout {
     max-width: 100%;
     margin: 0 auto;
-    padding: 28px 16px 48px;
     background-color: #1f2937;
+    position: sticky;
     font-family:
         "Inter",
         system-ui,
@@ -1133,8 +1133,7 @@ body {
 .hero {
     background: linear-gradient(120deg, #0ea5e9, #0ea5e9 60%, #00a509);
     color: #f8fafc;
-    padding: 24px;
-    border-radius: 16px;
+    padding: 8px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1151,7 +1150,6 @@ body {
 .logo-mark {
     width: 40px;
     height: 40px;
-    border-radius: 10px;
     box-shadow: 0 10px 30px rgba(14, 165, 233, 0.25);
 }
 
@@ -1188,7 +1186,6 @@ body {
     background: rgba(15, 118, 110, 0.25);
     border: 1px solid rgba(16, 185, 129, 0.5);
     padding: 10px 14px;
-    border-radius: 999px;
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -1198,7 +1195,6 @@ body {
 .dot {
     width: 10px;
     height: 10px;
-    border-radius: 50%;
     background: #22c55e;
     display: inline-block;
     box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.25);
@@ -1213,7 +1209,6 @@ body {
 
 .panel {
     border: 1px solid #e2e8f0;
-    border-radius: 14px;
     overflow: hidden;
     background: #ffffff;
     box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
@@ -1252,9 +1247,24 @@ body {
 }
 
 .field {
+    display: grid;
+    padding: 5px;
+}
+
+.field > div {
     display: flex;
     flex-direction: column;
+    gap: 5px;
+}
+
+.field.two-col {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 6px;
+}
+
+.field label {
+    margin-right: 5px;
 }
 
 .autocomplete {
@@ -1269,7 +1279,6 @@ body {
     padding: 4px;
     list-style: none;
     border: 1px solid #cbd5e1;
-    border-radius: 10px;
     background: #ffffff;
     box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
     max-height: 220px;
@@ -1283,7 +1292,6 @@ body {
     justify-content: space-between;
     gap: 8px;
     padding: 8px 10px;
-    border-radius: 8px;
     cursor: pointer;
     transition: background 0.1s ease;
 }
@@ -1302,7 +1310,6 @@ body {
 .field.two-col {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
 }
 
 label {
@@ -1314,7 +1321,6 @@ input,
 select,
 textarea {
     border: 1px solid #cbd5e1;
-    border-radius: 10px;
     padding: 10px 12px;
     font-size: 14px;
     background: #f8fafc;
@@ -1357,7 +1363,6 @@ textarea {
 .ghost,
 .danger {
     border: none;
-    border-radius: 10px;
     padding: 10px 14px;
     font-weight: 700;
     cursor: pointer;
@@ -1426,7 +1431,6 @@ textarea {
 .metric {
     padding: 12px;
     border: 1px solid #e2e8f0;
-    border-radius: 12px;
     background: #f8fafc;
 }
 
@@ -1466,7 +1470,6 @@ textarea {
 
 .trade-card {
     border: 1px solid #e2e8f0;
-    border-radius: 14px;
     padding: 14px;
     background: #fff;
 }
@@ -1498,7 +1501,6 @@ textarea {
 .cell {
     padding: 10px;
     border: 1px dashed #e2e8f0;
-    border-radius: 10px;
 }
 
 .cell p {
@@ -1539,7 +1541,6 @@ textarea {
 
 .modal {
     background: #ffffff;
-    border-radius: 14px;
     border: 1px solid #e2e8f0;
     max-width: 520px;
     width: 100%;
@@ -1582,4 +1583,12 @@ textarea {
         align-items: flex-start;
     }
 }
+
+textarea,
+select,
+button,
+input {
+    border-radius: 3px;
+}
+
 </style>

@@ -1,42 +1,42 @@
-import { PGlite } from '@electric-sql/pglite'
+import { PGlite } from "@electric-sql/pglite";
 
 // Use direct file URLs to avoid package export limits when bundling.
 const fsBundleUrl = new URL(
-  '../../node_modules/@electric-sql/pglite/dist/pglite.data',
+  "../../node_modules/@electric-sql/pglite/dist/pglite.data",
   import.meta.url,
-).href
+).href;
 const wasmUrl = new URL(
-  '../../node_modules/@electric-sql/pglite/dist/pglite.wasm',
+  "../../node_modules/@electric-sql/pglite/dist/pglite.wasm",
   import.meta.url,
-).href
+).href;
 
 async function loadWasm(url: string) {
-  const response = await fetch(url)
+  const response = await fetch(url);
 
   if (WebAssembly.compileStreaming) {
     try {
-      return await WebAssembly.compileStreaming(response.clone())
+      return await WebAssembly.compileStreaming(response.clone());
     } catch {
       // Fallback for browsers that mis-report streaming support
     }
   }
 
-  const buffer = await response.arrayBuffer()
-  return await WebAssembly.compile(buffer)
+  const buffer = await response.arrayBuffer();
+  return await WebAssembly.compile(buffer);
 }
 
 export default defineNuxtPlugin(async () => {
   const [fsBundle, wasmModule] = await Promise.all([
     fetch(fsBundleUrl).then((res) => res.blob()),
     loadWasm(wasmUrl),
-  ])
+  ]);
 
-  const db = new PGlite('idb://tibia-trader', {
+  const db = new PGlite("idb://tibia-trader", {
     fsBundle,
     wasmModule,
-  })
+  });
 
-  await db.waitReady
+  await db.waitReady;
 
   await db.exec(`
     CREATE TABLE IF NOT EXISTS users (
@@ -73,15 +73,11 @@ export default defineNuxtPlugin(async () => {
       note TEXT,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
-
-    INSERT INTO items (name)
-    VALUES ('Assassin Dagger'), ('Golden Helmet')
-    ON CONFLICT (name) DO NOTHING;
-  `)
+  `);
 
   return {
     provide: {
       pglite: db,
     },
-  }
-})
+  };
+});
