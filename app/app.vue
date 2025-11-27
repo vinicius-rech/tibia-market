@@ -66,6 +66,7 @@ const trades = ref<Trade[]>([]);
 const items = ref<string[]>([]);
 const editingTradeId = ref<number | null>(null);
 const showFeeModal = ref(false);
+const showTradeModal = ref(false);
 const globalBuyFeePct = ref(1);
 const globalSellFeePct = ref(2);
 const showSuggestions = ref(false);
@@ -257,6 +258,17 @@ function handleTabComplete() {
         filteredItems.value[highlightedSuggestion.value] ||
         filteredItems.value[0];
     selectSuggestion(choice);
+}
+
+function openNewTradeModal() {
+    resetForm();
+    showTradeModal.value = true;
+}
+
+function closeTradeModal() {
+    showTradeModal.value = false;
+    showSuggestions.value = false;
+    resetForm();
 }
 
 async function deleteItemFromDb(name: string) {
@@ -503,6 +515,8 @@ async function submitTrade() {
         }
 
         resetForm(saved.item);
+        showSuggestions.value = false;
+        showTradeModal.value = false;
     } catch (err) {
         error.value = err instanceof Error ? err.message : String(err);
     } finally {
@@ -530,10 +544,7 @@ function prefillUndercut(base: Trade) {
     form.sellUnits = base.sellUnits;
     form.parentTradeId = base.id;
     form.note = `Undercut de #${base.id}`;
-
-    if (typeof window !== "undefined") {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-    }
+    showTradeModal.value = true;
 }
 
 function startEdit(trade: Trade) {
@@ -545,9 +556,7 @@ function startEdit(trade: Trade) {
     form.sellUnits = trade.sellUnits;
     form.parentTradeId = trade.parentTradeId;
     form.note = trade.note ?? "";
-    if (typeof window !== "undefined") {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-    }
+    showTradeModal.value = true;
 }
 
 async function deleteTrade(tradeId: number) {
@@ -637,6 +646,13 @@ function formatUnits(value: number) {
             </div>
             <div class="hero__actions">
                 <button
+                    class="primary"
+                    type="button"
+                    @click="openNewTradeModal"
+                >
+                    Nova ordem
+                </button>
+                <button
                     class="ghost"
                     type="button"
                     @click="showFeeModal = true"
@@ -658,7 +674,7 @@ function formatUnits(value: number) {
                         <h3>Buy fee e Sell fee padroes</h3>
                     </div>
                     <button
-                        class="ghost icon"
+                        class="ghost"
                         type="button"
                         @click="showFeeModal = false"
                     >
@@ -709,270 +725,295 @@ function formatUnits(value: number) {
             </div>
         </div>
 
-        <main class="main-grid">
-            <section class="panel">
-                <div class="panel__header">
-                    <div>
-                        <h2>
-                            {{
-                                editingTradeId
-                                    ? `Editando #${editingTradeId}`
-                                    : "Nova ordem"
-                            }}
-                        </h2>
-                    </div>
-                    <div class="panel__actions">
-                        <button
-                            class="ghost"
-                            type="button"
-                            :disabled="saving"
-                            @click="resetForm()"
-                        >
-                            Limpar
-                        </button>
-                        <button
-                            v-if="editingTradeId"
-                            class="ghost"
-                            type="button"
-                            :disabled="saving"
-                            @click="resetForm()"
-                        >
-                            Cancelar edicao
-                        </button>
-                    </div>
-                </div>
-                <div class="panel__body">
-                    <form class="form" @submit.prevent="submitTrade">
-                        <div class="field">
-                            <label>Item</label>
-                            <div class="autocomplete"">
-                                <input
-                                    v-model="form.item"
-                                    type="text"
-                                    autocomplete="off"
-                                    spellcheck="false"
-                                    placeholder="Nome do item"
-                                    required
-                                    @focus="handleItemFocus"
-                                    @input="handleItemInput"
-                                    @blur="handleItemBlur"
-                                    @keydown.down.prevent="moveSuggestion(1)"
-                                    @keydown.up.prevent="moveSuggestion(-1)"
-                                    @keydown.delete="handleDeleteSuggestion"
-                                    @keydown.tab="handleTabComplete"
-                                />
-                                <ul
-                                    v-if="
-                                        showSuggestions && filteredItems.length
-                                    "
-                                    class="suggestions"
-                                    @mousedown.prevent
-                                >
-                                    <li
-                                        v-for="(
-                                            itemName, index
-                                        ) in filteredItems"
-                                        :key="itemName"
-                                        :class="{
-                                            active:
-                                                highlightedSuggestion === index,
-                                        }"
-                                        @mousedown.prevent="
-                                            selectSuggestion(itemName)
-                                        "
-                                        @mouseenter="
-                                            highlightedSuggestion = index
-                                        "
-                                    >
-                                        <span>{{ itemName }}</span>
-                                        <span
-                                            v-if="
-                                                highlightedSuggestion === index
-                                            "
-                                            class="suggestions__hint"
-                                        >
-                                            Tab para completar
-                                        </span>
-                                    </li>
-                                </ul>
-                            </div>
-                            <p class="helper">
-                                Busca itens ja cadastrados, prioriza prefixos e
-                                permite completar com Tab.
-                            </p>
+        <div
+            v-if="showTradeModal"
+            class="modal-backdrop"
+            @keydown.esc="closeTradeModal"
+        >
+            <div class="modal modal--wide">
+                <section class="panel">
+                    <div class="panel__header">
+                        <div>
+                            <p class="eyebrow">Lançamento</p>
+                            <h2>
+                                {{
+                                    editingTradeId
+                                        ? `Editando #${editingTradeId}`
+                                        : "Nova ordem"
+                                }}
+                            </h2>
+                        </div>
+                        <div class="panel__actions">
                             <button
-                                v-if="canRegisterItem"
-                                class="ghost inline"
+                                class="ghost"
                                 type="button"
                                 :disabled="saving"
-                                @click="registerItem"
+                                @click="resetForm()"
                             >
-                                Cadastrar "{{ form.item.trim() }}"
+                                Limpar
                             </button>
-                        </div>
-                        <div class="field two-col">
-                            <div>
-                                <label>Bid (compra)</label>
-                                <input
-                                    v-model.number="form.bid"
-                                    type="number"
-                                    min="0"
-                                    step="1"
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label>Ask (venda)</label>
-                                <input
-                                    v-model.number="form.ask"
-                                    type="number"
-                                    min="0"
-                                    step="1"
-                                    required
-                                />
-                            </div>
-                        </div>
-                        <div class="field two-col">
-                            <div>
-                                <label>Buy units</label>
-                                <input
-                                    v-model.number="form.buyUnits"
-                                    type="number"
-                                    min="1"
-                                    step="1"
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label>Sell units</label>
-                                <input
-                                    v-model.number="form.sellUnits"
-                                    type="number"
-                                    min="1"
-                                    step="1"
-                                    required
-                                />
-                            </div>
-                        </div>
-                        <div class="field">
-                            <label>Undercut (opcional)</label>
-                            <select v-model="form.parentTradeId">
-                                <option :value="null">Sem undercut</option>
-                                <option
-                                    v-for="trade in trades"
-                                    :key="trade.id"
-                                    :value="trade.id"
-                                    :disabled="editingTradeId === trade.id"
-                                >
-                                    #{{ trade.id }} · {{ trade.item }} · taxas
-                                    herdadas:
-                                    {{ formatGold(trade.cumulativeFees) }}
-                                </option>
-                            </select>
-                            <p class="helper">
-                                Selecione uma ordem para encadear um undercut e
-                                trazer as taxas acumuladas para o lucro real.
-                            </p>
-                        </div>
-                        <div class="field">
-                            <label>Observacao</label>
-                            <textarea
-                                v-model="form.note"
-                                rows="2"
-                                placeholder="Ex: relistado apos undercut, ajuste de preco, etc"
-                            ></textarea>
-                        </div>
-                        <div class="actions">
-                            <div class="hint">
-                                <p>
-                                    Spread:
-                                    <strong>{{
-                                        formatGold(derived.spread)
-                                    }}</strong>
-                                    · Profit:
-                                    <strong>{{
-                                        formatGold(derived.profit)
-                                    }}</strong>
-                                    · Real profit:
-                                    <strong>{{
-                                        formatGold(derived.realProfit)
-                                    }}</strong>
-                                </p>
-                                <p class="helper">
-                                    Real profit considera todas as taxas
-                                    herdadas do encadeamento.
-                                </p>
-                            </div>
                             <button
-                                class="primary"
-                                type="submit"
+                                v-if="editingTradeId"
+                                class="ghost"
+                                type="button"
                                 :disabled="saving"
+                                @click="resetForm()"
                             >
-                                {{
-                                    saving
-                                        ? "Salvando..."
-                                        : editingTradeId
-                                          ? "Salvar edicao"
-                                          : "Salvar ordem"
-                                }}
+                                Cancelar edicao
                             </button>
-                        </div>
-                    </form>
-                    <div class="metrics">
-                        <div class="metric">
-                            <p>Spread</p>
-                            <strong>{{ formatGold(derived.spread) }}</strong>
-                        </div>
-                        <div class="metric">
-                            <p>Buy trade value</p>
-                            <strong>{{
-                                formatGold(derived.buyTradeValue)
-                            }}</strong>
-                            <span
-                                >{{ formatUnits(form.buyUnits) }} un · fee
-                                {{ derived.buyFee * 100 }}%</span
+                            <button
+                                class="ghost"
+                                type="button"
+                                @click="closeTradeModal"
                             >
-                        </div>
-                        <div class="metric">
-                            <p>Trade value</p>
-                            <strong>{{
-                                formatGold(derived.tradeValue)
-                            }}</strong>
-                            <span
-                                >{{ formatUnits(form.sellUnits) }} un · fee
-                                {{ derived.sellFee * 100 }}%</span
-                            >
-                        </div>
-                        <div class="metric">
-                            <p>Total fees</p>
-                            <strong>{{ formatGold(derived.totalFees) }}</strong>
-                            <span>Inclui compra + venda</span>
-                        </div>
-                        <div class="metric">
-                            <p>Profit</p>
-                            <strong>{{ formatGold(derived.profit) }}</strong>
-                            <span>Sem undercut herdado</span>
-                        </div>
-                        <div class="metric highlight">
-                            <p>Real profit</p>
-                            <strong>{{
-                                formatGold(derived.realProfit)
-                            }}</strong>
-                            <span
-                                >?? Taxas herdadas:
-                                {{
-                                    formatGold(
-                                        derived.cumulativeFees -
-                                            derived.totalFees,
-                                    )
-                                }}</span
-                            >
+                                Fechar
+                            </button>
                         </div>
                     </div>
-                </div>
-            </section>
+                    <div class="panel__body">
+                        <form class="form" @submit.prevent="submitTrade">
+                            <div class="field">
+                                <label>Item</label>
+                                <div class="autocomplete">
+                                    <input
+                                        v-model="form.item"
+                                        type="text"
+                                        autocomplete="off"
+                                        spellcheck="false"
+                                        placeholder="Nome do item"
+                                        required
+                                        @focus="handleItemFocus"
+                                        @input="handleItemInput"
+                                        @blur="handleItemBlur"
+                                        @keydown.down.prevent="
+                                            moveSuggestion(1)
+                                        "
+                                        @keydown.up.prevent="moveSuggestion(-1)"
+                                        @keydown.delete="handleDeleteSuggestion"
+                                        @keydown.tab="handleTabComplete"
+                                    />
+                                    <ul
+                                        v-if="
+                                            showSuggestions &&
+                                            filteredItems.length
+                                        "
+                                        class="suggestions"
+                                        @mousedown.prevent
+                                    >
+                                        <li
+                                            v-for="(
+                                                itemName, index
+                                            ) in filteredItems"
+                                            :key="itemName"
+                                            :class="{
+                                                active:
+                                                    highlightedSuggestion ===
+                                                    index,
+                                            }"
+                                            @mousedown.prevent="
+                                                selectSuggestion(itemName)
+                                            "
+                                            @mouseenter="
+                                                highlightedSuggestion = index
+                                            "
+                                        >
+                                            <span>{{ itemName }}</span>
+                                            <span
+                                                v-if="
+                                                    highlightedSuggestion ===
+                                                    index
+                                                "
+                                                class="suggestions__hint"
+                                            >
+                                                Tab para completar
+                                            </span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <p class="helper">
+                                    Busca itens ja cadastrados, prioriza
+                                    prefixos e permite completar com Tab.
+                                </p>
+                                <button
+                                    v-if="canRegisterItem"
+                                    class="ghost inline"
+                                    type="button"
+                                    :disabled="saving"
+                                    @click="registerItem"
+                                >
+                                    Cadastrar "{{ form.item.trim() }}"
+                                </button>
+                            </div>
+                            <div class="field two-col">
+                                <div>
+                                    <label>Bid (compra)</label>
+                                    <input
+                                        v-model.number="form.bid"
+                                        type="number"
+                                        min="0"
+                                        step="1"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label>Ask (venda)</label>
+                                    <input
+                                        v-model.number="form.ask"
+                                        type="number"
+                                        min="0"
+                                        step="1"
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            <div class="field two-col">
+                                <div>
+                                    <label>Buy units</label>
+                                    <input
+                                        v-model.number="form.buyUnits"
+                                        type="number"
+                                        min="1"
+                                        step="1"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label>Sell units</label>
+                                    <input
+                                        v-model.number="form.sellUnits"
+                                        type="number"
+                                        min="1"
+                                        step="1"
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            <div class="field">
+                                <label>Undercut (opcional)</label>
+                                <select v-model="form.parentTradeId">
+                                    <option :value="null">Sem undercut</option>
+                                    <option
+                                        v-for="trade in trades"
+                                        :key="trade.id"
+                                        :value="trade.id"
+                                        :disabled="editingTradeId === trade.id"
+                                    >
+                                        #{{ trade.id }} · {{ trade.item }} ·
+                                        taxas herdadas:
+                                        {{ formatGold(trade.cumulativeFees) }}
+                                    </option>
+                                </select>
+                                <p class="helper">
+                                    Selecione uma ordem para encadear um
+                                    undercut e trazer as taxas acumuladas para o
+                                    lucro real.
+                                </p>
+                            </div>
+                            <div class="field">
+                                <label>Observacao</label>
+                                <textarea
+                                    v-model="form.note"
+                                    rows="2"
+                                    placeholder="Ex: relistado apos undercut, ajuste de preco, etc"
+                                ></textarea>
+                            </div>
+                            <div class="actions">
+                                <div class="hint">
+                                    <p>
+                                        Spread:
+                                        <strong>{{
+                                            formatGold(derived.spread)
+                                        }}</strong>
+                                        · Profit:
+                                        <strong>{{
+                                            formatGold(derived.profit)
+                                        }}</strong>
+                                        · Real profit:
+                                        <strong>{{
+                                            formatGold(derived.realProfit)
+                                        }}</strong>
+                                    </p>
+                                    <p class="helper">
+                                        Real profit considera todas as taxas
+                                        herdadas do encadeamento.
+                                    </p>
+                                </div>
+                                <button
+                                    class="primary"
+                                    type="submit"
+                                    :disabled="saving"
+                                >
+                                    {{
+                                        saving
+                                            ? "Salvando..."
+                                            : editingTradeId
+                                              ? "Salvar edicao"
+                                              : "Salvar ordem"
+                                    }}
+                                </button>
+                            </div>
+                        </form>
+                        <div class="metrics">
+                            <div class="metric">
+                                <p>Spread</p>
+                                <strong>{{
+                                    formatGold(derived.spread)
+                                }}</strong>
+                            </div>
+                            <div class="metric">
+                                <p>Buy trade value</p>
+                                <strong>{{
+                                    formatGold(derived.buyTradeValue)
+                                }}</strong>
+                                <span
+                                    >{{ formatUnits(form.buyUnits) }} un · fee
+                                    {{ derived.buyFee * 100 }}%</span
+                                >
+                            </div>
+                            <div class="metric">
+                                <p>Trade value</p>
+                                <strong>{{
+                                    formatGold(derived.tradeValue)
+                                }}</strong>
+                                <span
+                                    >{{ formatUnits(form.sellUnits) }} un · fee
+                                    {{ derived.sellFee * 100 }}%</span
+                                >
+                            </div>
+                            <div class="metric">
+                                <p>Total fees</p>
+                                <strong>{{
+                                    formatGold(derived.totalFees)
+                                }}</strong>
+                                <span>Inclui compra + venda</span>
+                            </div>
+                            <div class="metric">
+                                <p>Profit</p>
+                                <strong>{{
+                                    formatGold(derived.profit)
+                                }}</strong>
+                                <span>Sem undercut herdado</span>
+                            </div>
+                            <div class="metric highlight">
+                                <p>Real profit</p>
+                                <strong>{{
+                                    formatGold(derived.realProfit)
+                                }}</strong>
+                                <span
+                                    >?? Taxas herdadas:
+                                    {{
+                                        formatGold(
+                                            derived.cumulativeFees -
+                                                derived.totalFees,
+                                        )
+                                    }}</span
+                                >
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
-            <!-- <section class="panel">
+                <!-- <section class="panel">
                 <div class="panel__header">
                     <div>
                         <p class="eyebrow">Status</p>
@@ -992,13 +1033,13 @@ function formatUnits(value: number) {
                     </p>
                 </div>
             </section> -->
-        </main>
+            </div>
+        </div>
 
         <section class="panel trades">
             <div class="panel__header">
                 <div>
-                    <p class="eyebrow">Historico</p>
-                    <h2>Ordens registradas</h2>
+                    <h2>Historico</h2>
                 </div>
             </div>
             <div class="panel__body">
@@ -1116,9 +1157,10 @@ body {
 }
 
 .layout {
-    max-width: 100%;
+    max-width: 100dvw;
+    min-height: 100dvh;
+    background-color: #060608;
     margin: 0 auto;
-    background-color: #1f2937;
     position: sticky;
     font-family:
         "Inter",
@@ -1131,14 +1173,14 @@ body {
 }
 
 .hero {
-    background: linear-gradient(120deg, #0ea5e9, #0ea5e9 60%, #00a509);
+    background: #030305;
     color: #f8fafc;
+    border-bottom: solid 1px #3b1725;
     padding: 8px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
 }
 
 .hero__left {
@@ -1208,19 +1250,20 @@ body {
 }
 
 .panel {
-    border: 1px solid #e2e8f0;
+    border: 1px solid #333941;
+    color: #ffffff;
     overflow: hidden;
-    background: #ffffff;
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+    max-width: 90dvw;
+    margin: 0 auto;
+    background: #000000;
 }
 
 .panel__header {
-    padding: 16px 20px;
-    border-bottom: 1px solid #e2e8f0;
+    padding: 20px;
+    border-bottom: 1px solid #333941;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
 }
 
 .panel__actions {
@@ -1235,10 +1278,6 @@ body {
 
 .panel__body {
     padding: 20px;
-}
-
-.panel.trades .panel__body {
-    padding: 16px;
 }
 
 .form {
@@ -1356,7 +1395,7 @@ textarea {
 }
 
 .hint {
-    color: #0f172a;
+    color: #ffffff;
 }
 
 .primary,
@@ -1373,9 +1412,9 @@ textarea {
 }
 
 .primary {
-    background: linear-gradient(90deg, #0ea5e9, #14b8a6);
+    background: #030305;
+    border: solid 1px #3b1725;
     color: #ffffff;
-    box-shadow: 0 8px 22px rgba(14, 165, 233, 0.35);
 }
 
 .primary:disabled {
@@ -1385,8 +1424,9 @@ textarea {
 }
 
 .ghost {
-    background: #e2e8f0;
-    color: #0f172a;
+    background: #030305;
+    color: #ffffff;
+    border: solid 1px #3b1725;
 }
 
 .ghost.icon {
@@ -1411,8 +1451,8 @@ textarea {
 }
 
 .danger {
-    background: #fee2e2;
-    color: #991b1b;
+    background: #991b1b;
+    color: #ffffff;
 }
 
 .primary:hover:not(:disabled),
@@ -1431,7 +1471,16 @@ textarea {
 .metric {
     padding: 12px;
     border: 1px solid #e2e8f0;
-    background: #f8fafc;
+    background: #030305;
+    color: #0c0c14;
+}
+
+.metrics .metric > strong {
+    color: #ffffff;
+}
+
+.metrics .metric p {
+    color: #ffffff;
 }
 
 .metric p {
@@ -1453,8 +1502,12 @@ textarea {
 }
 
 .metric.highlight {
-    background: linear-gradient(180deg, #ecfeff, #f5f3ff);
+    background-color: #047857;
     border-color: #c4b5fd;
+}
+
+.metric.highlight span {
+    color: #ffffff;
 }
 
 .status {
@@ -1471,7 +1524,7 @@ textarea {
 .trade-card {
     border: 1px solid #e2e8f0;
     padding: 14px;
-    background: #fff;
+    background: #030305;
 }
 
 .trade-card__header {
@@ -1505,7 +1558,7 @@ textarea {
 
 .cell p {
     margin: 0;
-    color: #475569;
+    color: #ffffff;
     font-weight: 600;
 }
 
@@ -1542,10 +1595,13 @@ textarea {
 .modal {
     background: #ffffff;
     border: 1px solid #e2e8f0;
-    max-width: 520px;
+    max-width: 80dvw;
     width: 100%;
-    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.2);
     overflow: hidden;
+}
+
+.modal--wide {
+    max-width: 80dvw;
 }
 
 .modal__header {
@@ -1554,23 +1610,27 @@ textarea {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    background-color: #030305;
     gap: 10px;
 }
 
 .modal__header h3 {
     margin: 2px 0 0;
+    color: #64748b;
 }
 
 .modal__body {
     padding: 16px;
     display: grid;
     gap: 12px;
+    background-color: #030305;
 }
 
 .modal__footer {
     padding: 12px 16px 16px;
     display: flex;
     justify-content: flex-end;
+    background-color: #030305;
 }
 
 @media (max-width: 900px) {
@@ -1584,11 +1644,17 @@ textarea {
     }
 }
 
+label {
+    color: #ffffff;
+}
+
 textarea,
 select,
 button,
 input {
     border-radius: 3px;
+    border: solid 1px #3b1725;
+    background: #030305;
+    color: #ffffff;
 }
-
 </style>
