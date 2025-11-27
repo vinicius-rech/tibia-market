@@ -1139,14 +1139,6 @@ function formatUnits(value: number) {
                     </select>
                 </div>
             </div>
-            <div class="panel__actions">
-                <select v-model="selectedListItem">
-                    <option value="">Todos os itens</option>
-                    <option v-for="item in items" :key="item" :value="item">
-                        {{ item }}
-                    </option>
-                </select>
-            </div>
             <div class="panel__body">
                 <p v-if="trades.length === 0" class="helper">
                     Cadastre ordens para visualizar historico e tendencias.
