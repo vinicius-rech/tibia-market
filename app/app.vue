@@ -479,6 +479,39 @@ async function handleImportFile(event: Event) {
     }
 }
 
+async function resetDatabase() {
+    error.value = null;
+    if (typeof window !== "undefined") {
+        const confirmed = window.confirm(
+            "Tem certeza que deseja apagar todos os dados? Esta ação é irreversível.",
+        );
+        if (!confirmed) return;
+    }
+
+    try {
+        if (!$pglite) {
+            throw new Error("PGlite plugin not initialized");
+        }
+
+        await $pglite.query("BEGIN;");
+        try {
+            await $pglite.query("DELETE FROM trades;");
+            await $pglite.query("DELETE FROM items;");
+            await $pglite.query("COMMIT;");
+        } catch (err) {
+            await $pglite.query("ROLLBACK;");
+            throw err;
+        }
+
+        trades.value = [];
+        items.value = [];
+        selectedChartItem.value = "";
+        selectedListItem.value = "";
+    } catch (err) {
+        error.value = err instanceof Error ? err.message : String(err);
+    }
+}
+
 function closeTradeModal() {
     showTradeModal.value = false;
     showSuggestions.value = false;
@@ -1035,6 +1068,13 @@ function formatUnits(value: number) {
                             @click="triggerImport"
                         >
                             Importar dados
+                        </button>
+                        <button
+                            class="danger"
+                            type="button"
+                            @click="resetDatabase"
+                        >
+                            Resetar dados
                         </button>
                         <input
                             ref="importInput"
