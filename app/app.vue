@@ -91,6 +91,15 @@ const chartSeries = computed(() => {
     };
 });
 
+const chartStats = computed(() => ({
+    profit: sparkStats(chartSeries.value.profit),
+    spread: sparkStats(chartSeries.value.spread),
+    buyValue: sparkStats(chartSeries.value.buyValue),
+    sellValue: sparkStats(chartSeries.value.sellValue),
+    fees: sparkStats(chartSeries.value.fees),
+    units: sparkStats(chartSeries.value.units),
+}));
+
 const form = reactive<TradeInput>({
     item: "",
     bid: 0,
@@ -101,15 +110,21 @@ const form = reactive<TradeInput>({
     note: "",
 });
 
+const selectedParentId = computed(() => {
+    const rawId = form.parentTradeId;
+    const numeric =
+        typeof rawId === "number" ? rawId : Number.parseInt(String(rawId), 10);
+    return Number.isFinite(numeric) && numeric > 0 ? numeric : null;
+});
+
 const parentFee = computed(() => {
-    if (!form.parentTradeId) {
+    if (!selectedParentId.value) {
         return 0;
     }
 
     const parent = trades.value.find(
-        (trade) => trade.id === form.parentTradeId,
+        (trade) => trade.id === selectedParentId.value,
     );
-
     return parent?.cumulativeFees ?? 0;
 });
 
@@ -197,9 +212,9 @@ function buildMetrics(
     const buyTradeValue = bid * buyUnits;
     const tradeValue = ask * sellUnits;
     const totalFees = buyTradeValue * buyFee + tradeValue * sellFee;
-    const profit = tradeValue - buyTradeValue - totalFees;
+    const profit = tradeValue - buyTradeValue; // lucro bruto (sem taxas)
     const cumulativeFees = totalFees + inheritedFees;
-    const realProfit = tradeValue - buyTradeValue - cumulativeFees;
+    const realProfit = profit - cumulativeFees;
 
     return {
         spread,
@@ -491,7 +506,7 @@ async function submitTrade() {
             metrics.inheritedFees,
             metrics.cumulativeFees,
             metrics.realProfit,
-            form.parentTradeId,
+            selectedParentId.value,
             form.note?.trim() || null,
         ];
 
@@ -931,7 +946,7 @@ function formatUnits(value: number) {
                             </div>
                             <div class="field">
                                 <label>Undercut (opcional)</label>
-                                <select v-model="form.parentTradeId">
+                                <select v-model.number="form.parentTradeId">
                                     <option :value="null">Sem undercut</option>
                                     <option
                                         v-for="trade in trades"
@@ -1033,22 +1048,14 @@ function formatUnits(value: number) {
                                 <strong>{{
                                     formatGold(derived.profit)
                                 }}</strong>
-                                <span>Sem undercut herdado</span>
+                                <span>Lucro bruto (antes das taxas)</span>
                             </div>
                             <div class="metric highlight">
                                 <p>Real profit</p>
                                 <strong>{{
                                     formatGold(derived.realProfit)
                                 }}</strong>
-                                <span
-                                    >?? Taxas herdadas:
-                                    {{
-                                        formatGold(
-                                            derived.cumulativeFees -
-                                                derived.totalFees,
-                                        )
-                                    }}</span
-                                >
+                                <span>Lucro liquido (taxas + herdadas)</span>
                             </div>
                         </div>
                     </div>
@@ -1166,8 +1173,10 @@ function formatUnits(value: number) {
                                 >
                             </div>
                             <div class="cell">
-                                <p>Profit</p>
-                                <strong>{{ formatGold(trade.profit) }}</strong>
+                                <p>Real Profit</p>
+                                <strong>{{
+                                    formatGold(trade.realProfit)
+                                }}</strong>
                                 <span
                                     >Real:
                                     {{ formatGold(trade.realProfit) }}</span
@@ -1203,14 +1212,16 @@ function formatUnits(value: number) {
                     <article class="chart-card">
                         <div class="chart-card__header">
                             <p>Real profit</p>
-                            <strong>{{ formatGold(sparkStats(chartSeries.profit).latest) }}</strong>
+                            <strong>{{
+                                formatGold(chartStats.profit.latest)
+                            }}</strong>
                             <span
                                 :class="{
-                                    positive: sparkStats(chartSeries.profit).delta >= 0,
-                                    negative: sparkStats(chartSeries.profit).delta < 0,
+                                    positive: chartStats.profit.delta >= 0,
+                                    negative: chartStats.profit.delta < 0,
                                 }"
                             >
-                                {{ formatGold(sparkStats(chartSeries.profit).delta) }}
+                                {{ formatGold(chartStats.profit.delta) }}
                             </span>
                         </div>
                         <svg
@@ -1227,14 +1238,16 @@ function formatUnits(value: number) {
                     <article class="chart-card">
                         <div class="chart-card__header">
                             <p>Spread</p>
-                            <strong>{{ formatGold(sparkStats(chartSeries.spread).latest) }}</strong>
+                            <strong>{{
+                                formatGold(chartStats.spread.latest)
+                            }}</strong>
                             <span
                                 :class="{
-                                    positive: sparkStats(chartSeries.spread).delta >= 0,
-                                    negative: sparkStats(chartSeries.spread).delta < 0,
+                                    positive: chartStats.spread.delta >= 0,
+                                    negative: chartStats.spread.delta < 0,
                                 }"
                             >
-                                {{ formatGold(sparkStats(chartSeries.spread).delta) }}
+                                {{ formatGold(chartStats.spread.delta) }}
                             </span>
                         </div>
                         <svg
@@ -1251,14 +1264,16 @@ function formatUnits(value: number) {
                     <article class="chart-card">
                         <div class="chart-card__header">
                             <p>Valor de compra</p>
-                            <strong>{{ formatGold(sparkStats(chartSeries.buyValue).latest) }}</strong>
+                            <strong>{{
+                                formatGold(chartStats.buyValue.latest)
+                            }}</strong>
                             <span
                                 :class="{
-                                    positive: sparkStats(chartSeries.buyValue).delta >= 0,
-                                    negative: sparkStats(chartSeries.buyValue).delta < 0,
+                                    positive: chartStats.buyValue.delta >= 0,
+                                    negative: chartStats.buyValue.delta < 0,
                                 }"
                             >
-                                {{ formatGold(sparkStats(chartSeries.buyValue).delta) }}
+                                {{ formatGold(chartStats.buyValue.delta) }}
                             </span>
                         </div>
                         <svg
@@ -1275,14 +1290,16 @@ function formatUnits(value: number) {
                     <article class="chart-card">
                         <div class="chart-card__header">
                             <p>Valor de venda</p>
-                            <strong>{{ formatGold(sparkStats(chartSeries.sellValue).latest) }}</strong>
+                            <strong>{{
+                                formatGold(chartStats.sellValue.latest)
+                            }}</strong>
                             <span
                                 :class="{
-                                    positive: sparkStats(chartSeries.sellValue).delta >= 0,
-                                    negative: sparkStats(chartSeries.sellValue).delta < 0,
+                                    positive: chartStats.sellValue.delta >= 0,
+                                    negative: chartStats.sellValue.delta < 0,
                                 }"
                             >
-                                {{ formatGold(sparkStats(chartSeries.sellValue).delta) }}
+                                {{ formatGold(chartStats.sellValue.delta) }}
                             </span>
                         </div>
                         <svg
@@ -1299,14 +1316,16 @@ function formatUnits(value: number) {
                     <article class="chart-card">
                         <div class="chart-card__header">
                             <p>Taxas</p>
-                            <strong>{{ formatGold(sparkStats(chartSeries.fees).latest) }}</strong>
+                            <strong>{{
+                                formatGold(chartStats.fees.latest)
+                            }}</strong>
                             <span
                                 :class="{
-                                    positive: sparkStats(chartSeries.fees).delta >= 0,
-                                    negative: sparkStats(chartSeries.fees).delta < 0,
+                                    positive: chartStats.fees.delta >= 0,
+                                    negative: chartStats.fees.delta < 0,
                                 }"
                             >
-                                {{ formatGold(sparkStats(chartSeries.fees).delta) }}
+                                {{ formatGold(chartStats.fees.delta) }}
                             </span>
                         </div>
                         <svg
@@ -1323,14 +1342,20 @@ function formatUnits(value: number) {
                     <article class="chart-card">
                         <div class="chart-card__header">
                             <p>Unidades totais</p>
-                            <strong>{{ formatUnits(sparkStats(chartSeries.units).latest) }}</strong>
+                            <strong>{{
+                                formatUnits(chartStats.units.latest)
+                            }}</strong>
                             <span
                                 :class="{
-                                    positive: sparkStats(chartSeries.units).delta >= 0,
-                                    negative: sparkStats(chartSeries.units).delta < 0,
+                                    positive: chartStats.units.delta >= 0,
+                                    negative: chartStats.units.delta < 0,
                                 }"
                             >
-                                {{ formatUnits(Math.round(sparkStats(chartSeries.units).delta)) }}
+                                {{
+                                    formatUnits(
+                                        Math.round(chartStats.units.delta),
+                                    )
+                                }}
                             </span>
                         </div>
                         <svg
@@ -1538,11 +1563,12 @@ body {
 
 .suggestions li:hover,
 .suggestions li.active {
-    background: #e0f2fe;
+    background-color: #030305;
 }
 
 .suggestions__hint {
     color: #0284c7;
+    background-color: #030305;
     font-size: 12px;
     font-weight: 600;
 }
@@ -1760,9 +1786,9 @@ textarea {
 
 .chart-card {
     border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    border-radius: 3px;
     padding: 12px;
-    background: #f8fafc;
+    background: #030305;
     display: grid;
     gap: 10px;
 }
@@ -1782,7 +1808,7 @@ textarea {
 }
 
 .chart-card__header strong {
-    color: #0f172a;
+    color: #ffffff;
 }
 
 .chart-card__header span {
