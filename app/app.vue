@@ -78,7 +78,10 @@ const chartSeries = computed(() => {
     const ordered = trades.value.slice().reverse();
     const build = (extractor: (trade: Trade) => number) => {
         if (!ordered.length) return [0];
-        return ordered.map(extractor);
+        const numbers = ordered
+            .map((trade) => toNumber(extractor(trade)))
+            .filter((value) => Number.isFinite(value));
+        return numbers.length ? numbers : [0];
     };
 
     return {
@@ -232,12 +235,14 @@ function buildMetrics(
 
 function buildSparkPath(values: number[], width = 160, height = 80) {
     if (!values.length) return "";
-    const min = Math.min(...values);
-    const max = Math.max(...values);
+    const clean = values.filter((value) => Number.isFinite(value));
+    if (!clean.length) return "";
+    const min = Math.min(...clean);
+    const max = Math.max(...clean);
     const range = max - min || 1;
     const step = values.length > 1 ? width / (values.length - 1) : width;
 
-    return values
+    return clean
         .map((value, index) => {
             const x = Math.round(index * step);
             const normalized = (value - min) / range;
@@ -1750,7 +1755,6 @@ textarea {
 }
 
 .trade-card {
-    border: 1px solid #e2e8f0;
     padding: 14px;
     background: #030305;
 }
@@ -1786,7 +1790,6 @@ textarea {
 }
 
 .chart-card {
-    border: 1px solid #e2e8f0;
     border-radius: 3px;
     padding: 12px;
     background: #030305;
@@ -1796,7 +1799,7 @@ textarea {
 
 .chart-card__header {
     display: grid;
-    grid-template-columns: 1fr auto auto;
+    grid-template-columns: 1fr;
     align-items: center;
     gap: 6px;
     font-weight: 700;
