@@ -10,6 +10,7 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@electric-sql/pglite": "^0.3.14",
     "@nuxt/eslint": "^1.10.0",
     "@nuxt/hints": "^1.0.0-alpha.2",
     "@nuxt/image": "^2.0.0",
