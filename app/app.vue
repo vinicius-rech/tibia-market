@@ -71,6 +71,8 @@ const selectedChartItem = ref("");
 const selectedListItem = ref("");
 const showCharts = ref(true);
 const showTrades = ref(true);
+const showBackupModal = ref(false);
+const importInput = ref<HTMLInputElement | null>(null);
 const globalBuyFeePct = ref(1);
 const globalSellFeePct = ref(2);
 const showSuggestions = ref(false);
@@ -341,6 +343,138 @@ function handleTabComplete() {
 function openNewTradeModal() {
     resetForm();
     showTradeModal.value = true;
+}
+
+function downloadJson(data: unknown, filename: string) {
+    if (typeof window === "undefined") return;
+    const payload = JSON.stringify(data, null, 2);
+    const blob = new Blob([payload], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+}
+
+async function exportBackup() {
+    error.value = null;
+    try {
+        if (!$pglite) {
+            throw new Error("PGlite plugin not initialized");
+        }
+
+        const [itemsDump, tradesDump] = await Promise.all([
+            $pglite.query<ItemRow>("SELECT name, created_at FROM items;"),
+            $pglite.query<TradeRow>(
+                "SELECT * FROM trades ORDER BY created_at DESC, id DESC;",
+            ),
+        ]);
+
+        const backup = {
+            generatedAt: new Date().toISOString(),
+            items: itemsDump.rows,
+            trades: tradesDump.rows,
+        };
+
+        const dateSlug = new Date().toISOString().split("T")[0];
+        downloadJson(backup, `tibia-trader-backup-${dateSlug}.json`);
+    } catch (err) {
+        error.value = err instanceof Error ? err.message : String(err);
+    }
+}
+
+function triggerImport() {
+    if (typeof window === "undefined") return;
+    importInput.value?.click();
+}
+
+async function handleImportFile(event: Event) {
+    error.value = null;
+    const inputEl = event.target as HTMLInputElement | null;
+    const file = inputEl?.files?.[0];
+    if (!file) return;
+
+    try {
+        if (!$pglite) {
+            throw new Error("PGlite plugin not initialized");
+        }
+        const text = await file.text();
+        const parsed = JSON.parse(text) as {
+            items?: Array<{ name: string }>;
+            trades?: TradeRow[];
+        };
+
+        const itemsData = Array.isArray(parsed.items) ? parsed.items : [];
+        const tradesData = Array.isArray(parsed.trades) ? parsed.trades : [];
+
+        await $pglite.query("BEGIN;");
+        try {
+            await $pglite.query("DELETE FROM trades;");
+            await $pglite.query("DELETE FROM items;");
+
+            for (const item of itemsData) {
+                if (!item?.name) continue;
+                await $pglite.query(
+                    "INSERT INTO items (name) VALUES ($1) ON CONFLICT (name) DO NOTHING;",
+                    [item.name],
+                );
+            }
+
+            for (const trade of tradesData) {
+                await $pglite.query(
+                    `
+            INSERT INTO trades (
+              id, item, bid, ask, spread, buy_fee, sell_fee, buy_units, sell_units,
+              buy_trade_value, trade_value, total_fees, profit, inherited_fees,
+              cumulative_fees, real_profit, parent_trade_id, note, created_at
+            )
+            OVERRIDING SYSTEM VALUE
+            VALUES (
+              $1, $2, $3, $4, $5, $6, $7, $8, $9,
+              $10, $11, $12, $13, $14, $15, $16, $17, $18, $19
+            )
+            ON CONFLICT (id) DO NOTHING;
+          `,
+                    [
+                        trade.id ?? null,
+                        trade.item ?? "",
+                        toNumber(trade.bid),
+                        toNumber(trade.ask),
+                        toNumber(trade.spread),
+                        toNumber(trade.buy_fee),
+                        toNumber(trade.sell_fee),
+                        toNumber(trade.buy_units),
+                        toNumber(trade.sell_units),
+                        toNumber(trade.buy_trade_value),
+                        toNumber(trade.trade_value),
+                        toNumber(trade.total_fees),
+                        toNumber(trade.profit),
+                        toNumber(trade.inherited_fees),
+                        toNumber(trade.cumulative_fees),
+                        toNumber(trade.real_profit),
+                        trade.parent_trade_id ?? null,
+                        trade.note ?? null,
+                        trade.created_at ?? new Date().toISOString(),
+                    ],
+                );
+            }
+
+            await $pglite.query("COMMIT;");
+        } catch (err) {
+            await $pglite.query("ROLLBACK;");
+            throw err;
+        }
+
+        await Promise.all([loadItems(), loadTrades()]);
+        showBackupModal.value = false;
+    } catch (err) {
+        error.value = err instanceof Error ? err.message : String(err);
+    } finally {
+        if (importInput.value) {
+            importInput.value.value = "";
+        }
+    }
 }
 
 function closeTradeModal() {
@@ -757,6 +891,13 @@ function formatUnits(value: number) {
                 >
                     Taxas
                 </button>
+                <button
+                    class="ghost"
+                    type="button"
+                    @click="showBackupModal = true"
+                >
+                    Backup
+                </button>
             </div>
         </header>
 
@@ -819,6 +960,61 @@ function formatUnits(value: number) {
                     >
                         Fechar
                     </button>
+                </div>
+            </div>
+        </div>
+
+        <div
+            v-if="showBackupModal"
+            class="modal-backdrop"
+            @click.self="showBackupModal = false"
+        >
+            <div class="modal">
+                <div class="modal__header">
+                    <div>
+                        <p class="eyebrow">Backup</p>
+                        <h3>Exportar ou importar dados</h3>
+                    </div>
+                    <button
+                        class="ghost"
+                        type="button"
+                        @click="showBackupModal = false"
+                    >
+                        Fechar
+                    </button>
+                </div>
+                <div class="modal__body">
+                    <p class="helper">
+                        Exporta itens e ordens para um JSON e permite restaurar
+                        o mesmo arquivo depois.
+                    </p>
+                    <div class="panel__actions">
+                        <button
+                            class="primary"
+                            type="button"
+                            @click="exportBackup"
+                        >
+                            Exportar dados
+                        </button>
+                        <button
+                            class="ghost"
+                            type="button"
+                            @click="triggerImport"
+                        >
+                            Importar dados
+                        </button>
+                        <input
+                            ref="importInput"
+                            type="file"
+                            accept="application/json"
+                            class="hidden-file-input"
+                            @change="handleImportFile"
+                        />
+                    </div>
+                    <p class="helper">
+                        A importacao substitui itens e ordens existentes pelo
+                        conteudo do arquivo selecionado.
+                    </p>
                 </div>
             </div>
         </div>
@@ -1128,7 +1324,10 @@ function formatUnits(value: number) {
 
         <section class="panel charts">
             <div class="panel__header">
-                <div class="panel__header__title" @click="showCharts = !showCharts">
+                <div
+                    class="panel__header__title"
+                    @click="showCharts = !showCharts"
+                >
                     <p class="eyebrow">Insights</p>
                     <h2>Graficos rapidos</h2>
                 </div>
@@ -1312,7 +1511,10 @@ function formatUnits(value: number) {
 
         <section class="panel trades">
             <div class="panel__header">
-                <div class="panel__header__title" @click="showTrades = !showTrades">
+                <div
+                    class="panel__header__title"
+                    @click="showTrades = !showTrades"
+                >
                     <p class="eyebrow">Ordens</p>
                     <h2>Histórico</h2>
                 </div>
@@ -1425,7 +1627,11 @@ function formatUnits(value: number) {
 
                             <div
                                 class="cell"
-                                style="background-color: green; color: #ffffff"
+                                style="
+                                    background-color: green;
+                                    color: #ffffff;
+                                    border: none;
+                                "
                             >
                                 <p>Real Profit</p>
                                 <strong>{{
@@ -1912,9 +2118,14 @@ textarea {
     stroke-linejoin: round;
 }
 
+.hidden-file-input {
+    display: none;
+}
+
 .cell {
     padding: 10px;
-    border: 1px dashed #e2e8f0;
+    border: 1px solid #e2e8f050;
+    border-radius: 3px;
 }
 
 .cell p {
