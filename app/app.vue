@@ -994,7 +994,7 @@ function formatUnits(value: number) {
                                     v-model="form.note"
                                     rows="2"
                                     placeholder="Ex: relistado apos undercut, ajuste de preco, etc"
-                                ></textarea>
+                                />
                             </div>
                             <div class="actions">
                                 <div class="hint">
@@ -1106,122 +1106,6 @@ function formatUnits(value: number) {
             </section> -->
             </div>
         </div>
-
-        <section class="panel trades">
-            <div class="panel__header">
-                <div>
-                    <h2>Histórico</h2>
-                </div>
-            </div>
-            <div class="panel__body">
-                <p v-if="loading">Carregando...</p>
-                <p v-else-if="trades.length === 0">Nenhuma ordem cadastrada.</p>
-                <div v-else class="trade-list">
-                    <article
-                        v-for="trade in trades"
-                        :key="trade.id"
-                        class="trade-card"
-                    >
-                        <header class="trade-card__header">
-                            <div>
-                                <p class="eyebrow">
-                                    #{{ trade.id }} · {{ trade.item }}
-                                </p>
-                                <h3>{{ describeParent(trade) }}</h3>
-                            </div>
-                            <div class="card-actions">
-                                <button
-                                    class="ghost"
-                                    type="button"
-                                    @click="prefillUndercut(trade)"
-                                >
-                                    Criar undercut
-                                </button>
-                                <button
-                                    class="ghost"
-                                    type="button"
-                                    @click="startEdit(trade)"
-                                >
-                                    Editar
-                                </button>
-                                <button
-                                    class="danger"
-                                    type="button"
-                                    @click="deleteTrade(trade.id)"
-                                >
-                                    Deletar
-                                </button>
-                            </div>
-                        </header>
-                        <div class="trade-card__grid">
-                            <div class="cell">
-                                <p>
-                                    <span style="color: green">Bid</span> /
-                                    <span style="color: red">Ask</span>
-                                </p>
-                                <strong>
-                                    {{ formatGold(trade.bid) }} /
-                                    {{ formatGold(trade.ask) }}
-                                </strong>
-                                <span
-                                    >Spread:
-                                    {{ formatGold(trade.spread) }}</span
-                                >
-                            </div>
-                            <div class="cell">
-                                <p>Buy order</p>
-                                <strong>{{
-                                    formatGold(trade.buyTradeValue)
-                                }}</strong>
-                                <span
-                                    >{{ formatUnits(trade.buyUnits) }} un · fee
-                                    {{ formatPercent(trade.buyFee) }}</span
-                                >
-                            </div>
-                            <div class="cell">
-                                <p>Sell order</p>
-                                <strong>{{
-                                    formatGold(trade.tradeValue)
-                                }}</strong>
-                                <span
-                                    >{{ formatUnits(trade.sellUnits) }} un · fee
-                                    {{ formatPercent(trade.sellFee) }}</span
-                                >
-                            </div>
-                            <div class="cell">
-                                <p>Fees</p>
-                                <strong>{{
-                                    formatGold(trade.totalFees)
-                                }}</strong>
-                                <span
-                                    >Herdadas:
-                                    {{ formatGold(trade.inheritedFees) }}</span
-                                >
-                            </div>
-                            <div class="cell">
-                                <p>Registrado</p>
-                                <strong>{{
-                                    new Date(trade.createdAt).toLocaleString(
-                                        "pt-BR",
-                                    )
-                                }}</strong>
-                                <span v-if="trade.note">{{ trade.note }}</span>
-                            </div>
-
-                            <div
-                                class="cell"
-                                style="background-color: green; color: #ffffff"
-                            >
-                                <p>Real Profit</p>
-                                <strong>{{
-                                    formatGold(trade.realProfit)
-                                }}</strong>
-                            </div>
-                        </div>
-                    </article>
-                </div>
-            </div>
-        </section>
 
         <section class="panel charts">
             <div class="panel__header">
@@ -1402,6 +1286,123 @@ function formatUnits(value: number) {
                                 :d="buildSparkPath(chartSeries.units)"
                             />
                         </svg>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel trades">
+            <div class="panel__header">
+                <div>
+                    <p class="eyebrow">Ordens</p>
+                    <h2>Histórico</h2>
+                </div>
+            </div>
+            <div class="panel__body">
+                <p v-if="loading">Carregando...</p>
+                <p v-else-if="trades.length === 0">Nenhuma ordem cadastrada.</p>
+                <div v-else class="trade-list">
+                    <article
+                        v-for="trade in trades"
+                        :key="trade.id"
+                        class="trade-card"
+                    >
+                        <header class="trade-card__header">
+                            <div>
+                                <p class="eyebrow">
+                                    #{{ trade.id }} · {{ trade.item }}
+                                </p>
+                                <h3>{{ describeParent(trade) }}</h3>
+                            </div>
+                            <div class="card-actions">
+                                <button
+                                    class="ghost"
+                                    type="button"
+                                    @click="prefillUndercut(trade)"
+                                >
+                                    Criar undercut
+                                </button>
+                                <button
+                                    class="ghost"
+                                    type="button"
+                                    @click="startEdit(trade)"
+                                >
+                                    Editar
+                                </button>
+                                <button
+                                    class="danger"
+                                    type="button"
+                                    @click="deleteTrade(trade.id)"
+                                >
+                                    Deletar
+                                </button>
+                            </div>
+                        </header>
+                        <div class="trade-card__grid">
+                            <div class="cell">
+                                <p>
+                                    <span style="color: green">Bid</span> /
+                                    <span style="color: red">Ask</span>
+                                </p>
+                                <strong>
+                                    {{ formatGold(trade.bid) }} /
+                                    {{ formatGold(trade.ask) }}
+                                </strong>
+                                <span
+                                    >Spread:
+                                    {{ formatGold(trade.spread) }}</span
+                                >
+                            </div>
+                            <div class="cell">
+                                <p>Buy order</p>
+                                <strong>{{
+                                    formatGold(trade.buyTradeValue)
+                                }}</strong>
+                                <span
+                                    >{{ formatUnits(trade.buyUnits) }} un · fee
+                                    {{ formatPercent(trade.buyFee) }}</span
+                                >
+                            </div>
+                            <div class="cell">
+                                <p>Sell order</p>
+                                <strong>{{
+                                    formatGold(trade.tradeValue)
+                                }}</strong>
+                                <span
+                                    >{{ formatUnits(trade.sellUnits) }} un · fee
+                                    {{ formatPercent(trade.sellFee) }}</span
+                                >
+                            </div>
+                            <div class="cell">
+                                <p>Fees</p>
+                                <strong>{{
+                                    formatGold(trade.totalFees)
+                                }}</strong>
+                                <span
+                                    >Herdadas:
+                                    {{ formatGold(trade.inheritedFees) }}</span
+                                >
+                            </div>
+                            <div class="cell">
+                                <p>Registrado</p>
+                                <strong>{{
+                                    new Date(trade.createdAt).toLocaleString(
+                                        "pt-BR",
+                                    )
+                                }}</strong>
+                                <span v-if="trade.note">{{ trade.note }}</span>
+                            </div>
+
+                            <div
+                                class="cell"
+                                style="background-color: green; color: #ffffff"
+                            >
+                                <p>Real Profit</p>
+                                <strong>{{
+                                    formatGold(trade.realProfit)
+                                }}</strong>
+                            </div>
+                        </div>
                     </article>
                 </div>
             </div>
