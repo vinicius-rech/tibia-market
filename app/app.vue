@@ -1434,7 +1434,13 @@ function formatUnits(value: number) {
                                 }}</strong>
                                 <span>Lucro bruto (antes das taxas)</span>
                             </div>
-                            <div class="metric highlight">
+                            <div
+                                class="metric highlight"
+                                :class="{
+                                    'is-negative': derived.realProfit < 0,
+                                    'is-positive': derived.realProfit >= 0,
+                                }"
+                            >
                                 <p>Real profit</p>
                                 <strong>{{
                                     formatGold(derived.realProfit)
@@ -1544,7 +1550,14 @@ function formatUnits(value: number) {
                             All time (taxas diretas e herdadas).
                         </p>
                     </article>
-                    <article class="total-card total-card--highlight">
+                    <article
+                        class="total-card"
+                        :class="
+                            totalsSnapshot.totalRealProfit >= 0
+                                ? 'total-card--positive'
+                                : 'total-card--negative'
+                        "
+                    >
                         <p class="total-card__label">Real profit</p>
                         <p class="total-card__value">
                             {{ formatGold(totalsSnapshot.totalRealProfit) }}
@@ -1931,12 +1944,11 @@ function formatUnits(value: number) {
                             </div>
 
                             <div
-                                class="cell"
-                                style="
-                                    background-color: green;
-                                    color: #ffffff;
-                                    border: none;
-                                "
+                                class="cell real-profit-cell"
+                                :class="{
+                                    'is-negative': trade.realProfit < 0,
+                                    'is-positive': trade.realProfit >= 0,
+                                }"
                             >
                                 <p>Real Profit</p>
                                 <strong>{{
@@ -2360,8 +2372,18 @@ textarea {
 }
 
 .metric.highlight {
-    background-color: #047857;
-    border-color: #c4b5fd;
+    border-color: #16a34a;
+    background: linear-gradient(135deg, #0a2f24, #0f3d2d);
+}
+
+.metric.highlight.is-positive {
+    border-color: #16a34a;
+    background: linear-gradient(135deg, #0a2f24, #0f3d2d);
+}
+
+.metric.highlight.is-negative {
+    border-color: #ef4444;
+    background: linear-gradient(135deg, #321016, #40131b);
 }
 
 .metric.highlight span {
@@ -2435,9 +2457,14 @@ textarea {
     gap: 6px;
 }
 
-.total-card--highlight {
+.total-card--positive {
     border-color: #16a34a;
     box-shadow: 0 0 0 1px rgba(22, 163, 74, 0.35);
+}
+
+.total-card--negative {
+    border-color: #b91c1c;
+    box-shadow: 0 0 0 1px rgba(185, 28, 28, 0.35);
 }
 
 .total-card__label {
@@ -2456,8 +2483,12 @@ textarea {
     font-size: 22px;
 }
 
-.total-card--highlight .total-card__value {
+.total-card--positive .total-card__value {
     color: #22c55e;
+}
+
+.total-card--negative .total-card__value {
+    color: #f87171;
 }
 
 .total-card__meta {
@@ -2549,6 +2580,20 @@ textarea {
 .cell span {
     color: #64748b;
     font-size: 12px;
+}
+
+.real-profit-cell {
+    border: none;
+    background: linear-gradient(135deg, #0a2f24, #0f3d2d);
+    color: #ffffff;
+}
+
+.real-profit-cell.is-negative {
+    background: linear-gradient(135deg, #321016, #40131b);
+}
+
+.real-profit-cell.is-positive {
+    background: linear-gradient(135deg, #0a2f24, #0f3d2d);
 }
 
 .error {
