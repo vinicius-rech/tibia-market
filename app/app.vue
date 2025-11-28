@@ -1393,7 +1393,7 @@ function formatUnits(value: number) {
                                         v-model.number="form.buyUnits"
                                         type="number"
                                         min="0"
-                                        step="5"
+                                        step="1"
                                         required
                                     />
                                 </div>
@@ -1403,7 +1403,7 @@ function formatUnits(value: number) {
                                         v-model.number="form.sellUnits"
                                         type="number"
                                         min="0"
-                                        step="5"
+                                        step="1"
                                         required
                                     />
                                 </div>
