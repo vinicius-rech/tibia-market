@@ -68,7 +68,9 @@ const editingTradeId = ref<number | null>(null);
 const showFeeModal = ref(false);
 const showTradeModal = ref(false);
 const selectedChartItem = ref("");
+const selectedTotalsItem = ref("");
 const selectedListItem = ref("");
+const showTotals = ref(true);
 const showCharts = ref(true);
 const showTrades = ref(true);
 const showBackupModal = ref(false);
@@ -81,17 +83,17 @@ const SUGGESTION_LIMIT = 8;
 const VISIBILITY_STORAGE_KEY = "tibia-trader-visibility";
 let hideSuggestionsTimeout: number | null = null;
 
-const filteredTrades = computed(() => {
-    if (!selectedChartItem.value) return trades.value;
-    const needle = selectedChartItem.value.toLowerCase();
-    return trades.value.filter((trade) => trade.item.toLowerCase() === needle);
-});
+const filteredTrades = computed(() =>
+    filterTradesByItem(trades.value, selectedChartItem.value),
+);
 
-const filteredListTrades = computed(() => {
-    if (!selectedListItem.value) return trades.value;
-    const needle = selectedListItem.value.toLowerCase();
-    return trades.value.filter((trade) => trade.item.toLowerCase() === needle);
-});
+const filteredTotalsTrades = computed(() =>
+    filterTradesByItem(trades.value, selectedTotalsItem.value),
+);
+
+const filteredListTrades = computed(() =>
+    filterTradesByItem(trades.value, selectedListItem.value),
+);
 
 const chartSeries = computed(() => {
     const ordered = filteredTrades.value.slice().reverse();
@@ -121,6 +123,26 @@ const chartStats = computed(() => ({
     fees: sparkStats(chartSeries.value.fees),
     units: sparkStats(chartSeries.value.units),
 }));
+
+const totalsSnapshot = computed(() =>
+    filteredTotalsTrades.value.reduce(
+        (acc, trade) => {
+            acc.totalValue += toNumber(trade.tradeValue);
+            acc.totalFees += toNumber(trade.totalFees);
+            acc.totalRealProfit += toNumber(trade.realProfit);
+            acc.undercuts += trade.parentTradeId ? 1 : 0;
+            acc.count += 1;
+            return acc;
+        },
+        {
+            totalValue: 0,
+            totalFees: 0,
+            totalRealProfit: 0,
+            undercuts: 0,
+            count: 0,
+        },
+    ),
+);
 
 const form = reactive<TradeInput>({
     item: "",
@@ -212,6 +234,12 @@ onMounted(async () => {
 function toNumber(value: unknown) {
     const numeric = typeof value === "number" ? value : Number(value);
     return Number.isFinite(numeric) ? numeric : 0;
+}
+
+function filterTradesByItem(list: Trade[], item: string) {
+    if (!item) return list;
+    const needle = item.toLowerCase();
+    return list.filter((trade) => trade.item.toLowerCase() === needle);
 }
 
 function percentToDecimal(value: number) {
@@ -621,6 +649,7 @@ function hydrateVisibilityFromStorage() {
         const parsed = JSON.parse(raw) as {
             showCharts?: boolean;
             showTrades?: boolean;
+            showTotals?: boolean;
         };
 
         if (typeof parsed.showCharts === "boolean") {
@@ -629,6 +658,10 @@ function hydrateVisibilityFromStorage() {
 
         if (typeof parsed.showTrades === "boolean") {
             showTrades.value = parsed.showTrades;
+        }
+
+        if (typeof parsed.showTotals === "boolean") {
+            showTotals.value = parsed.showTotals;
         }
     } catch {
         // ignore parse errors
@@ -643,32 +676,32 @@ watch([globalBuyFeePct, globalSellFeePct], ([buy, sell]) => {
     );
 });
 
-watch([showCharts, showTrades], ([charts, trades]) => {
+watch([showCharts, showTrades, showTotals], ([charts, trades, totals]) => {
     if (typeof window === "undefined") return;
     window.localStorage.setItem(
         VISIBILITY_STORAGE_KEY,
-        JSON.stringify({ showCharts: charts, showTrades: trades }),
+        JSON.stringify({
+            showCharts: charts,
+            showTrades: trades,
+            showTotals: totals,
+        }),
     );
 });
 
-watch(items, () => {
-    if (!selectedChartItem.value) return;
+function ensureSelectionExists(selection: { value: string }) {
+    if (!selection.value) return;
     const exists = items.value.some(
-        (name) => name.toLowerCase() === selectedChartItem.value.toLowerCase(),
+        (name) => name.toLowerCase() === selection.value.toLowerCase(),
     );
     if (!exists) {
-        selectedChartItem.value = "";
+        selection.value = "";
     }
-});
+}
 
 watch(items, () => {
-    if (!selectedListItem.value) return;
-    const exists = items.value.some(
-        (name) => name.toLowerCase() === selectedListItem.value.toLowerCase(),
-    );
-    if (!exists) {
-        selectedListItem.value = "";
-    }
+    ensureSelectionExists(selectedChartItem);
+    ensureSelectionExists(selectedTotalsItem);
+    ensureSelectionExists(selectedListItem);
 });
 
 async function ensureItemExists(name: string) {
@@ -1249,8 +1282,8 @@ function formatUnits(value: number) {
                                     <input
                                         v-model.number="form.sellUnits"
                                         type="number"
-                                        min="1"
-                                        step="1"
+                                        min="0"
+                                        step="5"
                                         required
                                     />
                                 </div>
@@ -1395,14 +1428,146 @@ function formatUnits(value: number) {
             </div>
         </div>
 
+        <section class="panel totals">
+            <div class="panel__header">
+                <div class="panel__header__title">
+                    <p class="eyebrow">Resumo</p>
+                    <div class="panel__title-row">
+                        <h2>Totais consolidados</h2>
+                        <button
+                            class="panel__toggle"
+                            type="button"
+                            :aria-pressed="showTotals"
+                            :title="
+                                showTotals
+                                    ? 'Recolher painel de totais'
+                                    : 'Expandir painel de totais'
+                            "
+                            @click="showTotals = !showTotals"
+                        >
+                            <svg
+                                class="panel__toggle-icon"
+                                viewBox="0 0 20 20"
+                                aria-hidden="true"
+                                :class="{ 'is-open': showTotals }"
+                            >
+                                <path
+                                    d="M5 7l5 6 5-6"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                />
+                            </svg>
+                            <span>{{
+                                showTotals ? "Esconder" : "Mostrar"
+                            }}</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="panel__actions">
+                    <select v-model="selectedTotalsItem">
+                        <option value="">Todos os itens</option>
+                        <option v-for="item in items" :key="item" :value="item">
+                            {{ item }}
+                        </option>
+                    </select>
+                </div>
+            </div>
+            <div v-if="showTotals" class="panel__body">
+                <p v-if="trades.length === 0" class="helper">
+                    Cadastre ordens para ver os totais consolidados.
+                </p>
+                <p
+                    v-else-if="filteredTotalsTrades.length === 0"
+                    class="helper"
+                >
+                    Nenhuma ordem encontrada para este filtro.
+                </p>
+                <div v-else class="totals-grid">
+                    <article class="total-card">
+                        <p class="total-card__label">Valor vendido</p>
+                        <p class="total-card__value">
+                            {{ formatGold(totalsSnapshot.totalValue) }}
+                        </p>
+                        <p class="total-card__meta">
+                            Soma de trade value das ordens filtradas.
+                        </p>
+                    </article>
+                    <article class="total-card">
+                        <p class="total-card__label">Taxas pagas</p>
+                        <p class="total-card__value">
+                            {{ formatGold(totalsSnapshot.totalFees) }}
+                        </p>
+                        <p class="total-card__meta">
+                            All time (taxas diretas e herdadas).
+                        </p>
+                    </article>
+                    <article class="total-card total-card--highlight">
+                        <p class="total-card__label">Real profit</p>
+                        <p class="total-card__value">
+                            {{ formatGold(totalsSnapshot.totalRealProfit) }}
+                        </p>
+                        <p class="total-card__meta">Lucro liquido acumulado.</p>
+                    </article>
+                    <article class="total-card total-card--neutral">
+                        <p class="total-card__label">Undercuts</p>
+                        <p class="total-card__value">
+                            {{ formatUnits(totalsSnapshot.undercuts) }}
+                        </p>
+                        <p class="total-card__meta">
+                            Ordens com referencia de undercut.
+                        </p>
+                    </article>
+                    <article class="total-card total-card--neutral">
+                        <p class="total-card__label">Trades</p>
+                        <p class="total-card__value">
+                            {{ formatUnits(totalsSnapshot.count) }}
+                        </p>
+                        <p class="total-card__meta">
+                            Quantidade total do filtro.
+                        </p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
         <section class="panel charts">
             <div class="panel__header">
-                <div
-                    class="panel__header__title"
-                    @click="showCharts = !showCharts"
-                >
+                <div class="panel__header__title">
                     <p class="eyebrow">Insights</p>
-                    <h2>Graficos rapidos</h2>
+                    <div class="panel__title-row">
+                        <h2>Graficos rapidos</h2>
+                        <button
+                            class="panel__toggle"
+                            type="button"
+                            :aria-pressed="showCharts"
+                            :title="
+                                showCharts
+                                    ? 'Recolher graficos'
+                                    : 'Expandir graficos'
+                            "
+                            @click="showCharts = !showCharts"
+                        >
+                            <svg
+                                class="panel__toggle-icon"
+                                viewBox="0 0 20 20"
+                                aria-hidden="true"
+                                :class="{ 'is-open': showCharts }"
+                            >
+                                <path
+                                    d="M5 7l5 6 5-6"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                />
+                            </svg>
+                            <span>{{ showCharts ? "Esconder" : "Mostrar" }}</span>
+                        </button>
+                    </div>
                 </div>
                 <div class="panel__actions">
                     <select v-model="selectedChartItem">
@@ -1584,12 +1749,39 @@ function formatUnits(value: number) {
 
         <section class="panel trades">
             <div class="panel__header">
-                <div
-                    class="panel__header__title"
-                    @click="showTrades = !showTrades"
-                >
+                <div class="panel__header__title">
                     <p class="eyebrow">Ordens</p>
-                    <h2>Histórico</h2>
+                    <div class="panel__title-row">
+                        <h2>Historico</h2>
+                        <button
+                            class="panel__toggle"
+                            type="button"
+                            :aria-pressed="showTrades"
+                            :title="
+                                showTrades
+                                    ? 'Recolher historico'
+                                    : 'Expandir historico'
+                            "
+                            @click="showTrades = !showTrades"
+                        >
+                            <svg
+                                class="panel__toggle-icon"
+                                viewBox="0 0 20 20"
+                                aria-hidden="true"
+                                :class="{ 'is-open': showTrades }"
+                            >
+                                <path
+                                    d="M5 7l5 6 5-6"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                />
+                            </svg>
+                            <span>{{ showTrades ? "Esconder" : "Mostrar" }}</span>
+                        </button>
+                    </div>
                 </div>
                 <div class="panel__actions">
                     <select v-model="selectedListItem">
@@ -1790,7 +1982,7 @@ body {
     letter-spacing: 0.08em;
     font-weight: 700;
     font-size: 22px;
-    color: #ffffff;
+    color: #ffffff90;
     margin: 0 0 0;
 }
 
@@ -1837,13 +2029,63 @@ body {
 }
 
 .panel__header__title {
-    cursor: pointer;
-    user-select: none;
+    display: grid;
+    gap: 6px;
+}
+
+.panel__title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
 .panel__actions {
     display: flex;
     gap: 8px;
+}
+
+.panel__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid #1f2937;
+    background: radial-gradient(circle at 20% 20%, #0f172a, #0a0f1c);
+    color: #e2e8f0;
+    cursor: pointer;
+    transition:
+        border-color 0.2s ease,
+        background-color 0.2s ease,
+        color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.panel__toggle:hover {
+    border-color: #0ea5e9;
+    color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+.panel__toggle:active {
+    transform: translateY(1px);
+}
+
+.panel__toggle-icon {
+    width: 16px;
+    height: 16px;
+    transform: rotate(-90deg);
+    transition: transform 0.2s ease;
+}
+
+.panel__toggle-icon.is-open {
+    transform: rotate(0deg);
+}
+
+.panel__toggle span {
+    font-weight: 700;
+    letter-spacing: 0.2px;
 }
 
 .panel__header h2 {
@@ -1893,7 +2135,7 @@ body {
     padding: 4px;
     list-style: none;
     border: 1px solid #cbd5e1;
-    background: #ffffff;
+    background: #030305;
     box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
     max-height: 220px;
     overflow-y: auto;
@@ -1938,7 +2180,7 @@ textarea {
     border: 1px solid #cbd5e1;
     padding: 10px 12px;
     font-size: 14px;
-    background: #f8fafc;
+    background: #030305;
     transition:
         border-color 0.2s,
         box-shadow 0.2s;
@@ -2001,7 +2243,7 @@ textarea {
 
 .ghost {
     background: #030305;
-    color: #ffffff;
+    color: #ffffff90;
     border: solid 1px #3b1725;
 }
 
@@ -2118,6 +2360,7 @@ textarea {
 
 .trade-card__header h3 {
     margin: 4px 0 0;
+  color: #ffffff95;
 }
 
 .card-actions {
@@ -2130,6 +2373,53 @@ textarea {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 10px;
+}
+
+.totals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+}
+
+.total-card {
+    border-radius: 6px;
+    padding: 14px;
+    background: radial-gradient(circle at 0% 0%, #0d1425, #09060f 60%);
+    border: 1px solid #1f2937;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    display: grid;
+    gap: 6px;
+}
+
+.total-card--highlight {
+    border-color: #16a34a;
+    box-shadow: 0 0 0 1px rgba(22, 163, 74, 0.35);
+}
+
+.total-card__label {
+    margin: 0;
+    color: #94a3b8;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    text-transform: uppercase;
+    font-size: 12px;
+}
+
+.total-card__value {
+    margin: 0;
+    color: #e2e8f0;
+    font-weight: 800;
+    font-size: 22px;
+}
+
+.total-card--highlight .total-card__value {
+    color: #22c55e;
+}
+
+.total-card__meta {
+    margin: 0;
+    color: #64748b;
+    font-size: 12px;
 }
 
 .charts-grid {
@@ -2196,18 +2486,19 @@ textarea {
 
 .cell {
     padding: 10px;
-    border: 1px solid #e2e8f050;
+    border: 1px solid #e2e8f030;
     border-radius: 3px;
 }
 
 .cell p {
     margin: 0;
-    color: #ffffff;
+    color: #ffffff90;
     font-weight: 600;
 }
 
 .cell strong {
     display: block;
+    color: #ffffff90;
     margin-top: 4px;
 }
 
