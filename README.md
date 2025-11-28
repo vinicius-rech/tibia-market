@@ -1,75 +1,38 @@
-# Nuxt Minimal Starter
+# Tibia Market Desk
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+Aplicação Nuxt 4 para registrar ordens de compra/venda e undercuts no Tibia, com métricas, gráficos rápidos e backup/restauração local via PGlite.
 
-## Setup
+## Principais recursos
+- Registro de trades com taxas, spread, profit e real profit calculados automaticamente.
+- Sugestões/autocomplete de itens, filtros globais e edição/duplicação de operações.
+- Gráficos de tendência e painéis de totais para acompanhar performance.
+- Exportação/importação de backup em JSON e reset de dados (persistência local PGlite).
+- Vercel Analytics conectado para telemetria em produção.
 
-Make sure to install dependencies:
+## Requisitos
+- Node.js 18+ e npm.
 
+## Instalação
 ```bash
-# npm
 npm install
-
-# pnpm
-pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
 ```
 
-## Development Server
+## Scripts úteis
+- `npm run dev` – inicia o servidor de desenvolvimento em `http://localhost:3000`.
+- `npm run build` – cria o bundle de produção.
+- `npm run preview` – serve o bundle gerado para inspeção local.
+- `npm run generate` – gera build estático (quando aplicável).
+- `npm run postinstall` (automático) – executa `nuxt prepare` para sincronizar tipos.
 
-Start the development server on `http://localhost:3000`:
+## Desenvolvimento
+1) Execute `npm run dev` e acesse `http://localhost:3000`.
+2) Dados ficam salvos localmente via PGlite; use a seção de backup para exportar/importar JSON.
 
-```bash
-# npm
-npm run dev
+## Qualidade
+- Rode `npx eslint .` antes de enviar mudanças.
 
-# pnpm
-pnpm dev
+## Deploy
+- Crie o build com `npm run build` e faça o deploy do conteúdo de `.output/` na sua plataforma.
 
-# yarn
-yarn dev
-
-# bun
-bun run dev
-```
-
-## Production
-
-Build the application for production:
-
-```bash
-# npm
-npm run build
-
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
-```
-
-Locally preview production build:
-
-```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+## Licença
+- Este projeto está licenciado sob os termos da licença MIT (veja `LICENSE`).
