@@ -71,6 +71,7 @@ const showTradeModal = ref(false);
 const selectedChartItem = ref("");
 const selectedTotalsItem = ref("");
 const selectedListItem = ref("");
+const globalItemFilter = ref("");
 const showTotals = ref(true);
 const showCharts = ref(true);
 const showTrades = ref(true);
@@ -83,6 +84,7 @@ const highlightedSuggestion = ref(0);
 const SUGGESTION_LIMIT = 8;
 const MAX_DUPLICATIONS = 50;
 const VISIBILITY_STORAGE_KEY = "tibia-trader-visibility";
+const FILTER_STORAGE_KEY = "tibia-trader-filters";
 let hideSuggestionsTimeout: number | null = null;
 
 const filteredTrades = computed(() =>
@@ -226,6 +228,7 @@ onMounted(async () => {
 
         hydrateFeesFromStorage();
         hydrateVisibilityFromStorage();
+        hydrateFiltersFromStorage();
         await Promise.all([loadTrades(), loadItems()]);
     } catch (err) {
         error.value = err instanceof Error ? err.message : String(err);
@@ -677,6 +680,39 @@ function hydrateVisibilityFromStorage() {
     }
 }
 
+function hydrateFiltersFromStorage() {
+    if (typeof window === "undefined") return;
+    const raw = window.localStorage.getItem(FILTER_STORAGE_KEY);
+    if (!raw) return;
+
+    try {
+        const parsed = JSON.parse(raw) as {
+            chart?: string;
+            totals?: string;
+            list?: string;
+            global?: string;
+        };
+
+        if (typeof parsed.chart === "string") {
+            selectedChartItem.value = parsed.chart;
+        }
+        if (typeof parsed.totals === "string") {
+            selectedTotalsItem.value = parsed.totals;
+        }
+        if (typeof parsed.list === "string") {
+            selectedListItem.value = parsed.list;
+        }
+        if (typeof parsed.global === "string") {
+            globalItemFilter.value = parsed.global;
+            selectedChartItem.value = parsed.global;
+            selectedTotalsItem.value = parsed.global;
+            selectedListItem.value = parsed.global;
+        }
+    } catch {
+        // ignore parse errors
+    }
+}
+
 watch([globalBuyFeePct, globalSellFeePct], ([buy, sell]) => {
     if (typeof window === "undefined") return;
     window.localStorage.setItem(
@@ -697,6 +733,43 @@ watch([showCharts, showTrades, showTotals], ([charts, trades, totals]) => {
     );
 });
 
+watch(
+    [
+        selectedChartItem,
+        selectedTotalsItem,
+        selectedListItem,
+        globalItemFilter,
+    ],
+    ([chart, totals, list, global]) => {
+        if (typeof window === "undefined") return;
+        window.localStorage.setItem(
+            FILTER_STORAGE_KEY,
+            JSON.stringify({
+                chart,
+                totals,
+                list,
+                global,
+            }),
+        );
+    },
+);
+
+watch(globalItemFilter, (value) => {
+    selectedChartItem.value = value;
+    selectedTotalsItem.value = value;
+    selectedListItem.value = value;
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(
+        FILTER_STORAGE_KEY,
+        JSON.stringify({
+            chart: selectedChartItem.value,
+            totals: selectedTotalsItem.value,
+            list: selectedListItem.value,
+            global: value,
+        }),
+    );
+});
+
 function ensureSelectionExists(selection: { value: string }) {
     if (!selection.value) return;
     const exists = items.value.some(
@@ -711,6 +784,7 @@ watch(items, () => {
     ensureSelectionExists(selectedChartItem);
     ensureSelectionExists(selectedTotalsItem);
     ensureSelectionExists(selectedListItem);
+    ensureSelectionExists(globalItemFilter);
 });
 
 async function ensureItemExists(name: string) {
@@ -1000,6 +1074,14 @@ function formatUnits(value: number) {
                 </p> -->
             </div>
             <div class="hero__actions">
+                <div class="hero__filter">
+                    <select id="globalFilter" v-model="globalItemFilter">
+                        <option value="">Todos os itens</option>
+                        <option v-for="item in items" :key="item" :value="item">
+                            {{ item }}
+                        </option>
+                    </select>
+                </div>
                 <button
                     class="primary"
                     type="button"
@@ -2012,7 +2094,21 @@ body {
 .hero__actions {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.hero__filter {
+    display: grid;
+    gap: 6px;
+}
+
+.hero__filter label {
+    color: #94a3b8;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    text-transform: uppercase;
 }
 
 .hero h1 {
