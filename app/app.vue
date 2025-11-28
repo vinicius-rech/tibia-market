@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Analytics } from "@vercel/analytics/nuxt";
+
 type TradeRow = {
     id: number;
     item: string;
@@ -1062,6 +1064,7 @@ function formatUnits(value: number) {
 
 <template>
     <div class="layout">
+        <Analytics />
         <header class="hero">
             <div class="hero__left">
                 <p class="eyebrow">
