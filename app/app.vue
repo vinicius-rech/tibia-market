@@ -72,6 +72,7 @@ const selectedChartItem = ref("");
 const selectedTotalsItem = ref("");
 const selectedListItem = ref("");
 const globalItemFilter = ref("");
+const showAbout = ref(true);
 const showTotals = ref(true);
 const showCharts = ref(true);
 const showTrades = ref(true);
@@ -1103,6 +1104,16 @@ function formatUnits(value: number) {
                 >
                     Backup
                 </button>
+
+              <a
+                  class="hero__github"
+                  href="https://github.com/vinicius-rech/tibia-market"
+                  target="_blank"
+                  rel="noopener noreferrer"
+              >
+                <UIcon name="i-simple-icons-github" class="hero__github-icon" />
+                Github
+              </a>
             </div>
         </header>
 
@@ -1555,6 +1566,85 @@ function formatUnits(value: number) {
             </section> -->
             </div>
         </div>
+
+        <section class="panel about">
+            <div class="panel__header">
+                <div class="panel__header__title">
+                    <p class="eyebrow">Sobre</p>
+                    <div class="panel__title-row">
+                        <h2>Como a ferramenta funciona</h2>
+                        <button
+                            class="panel__toggle"
+                            type="button"
+                            :aria-pressed="showAbout"
+                            :title="
+                                showAbout
+                                    ? 'Recolher sessao de sobre'
+                                    : 'Expandir sessao de sobre'
+                            "
+                            @click="showAbout = !showAbout"
+                        >
+                            <svg
+                                class="panel__toggle-icon"
+                                viewBox="0 0 20 20"
+                                aria-hidden="true"
+                                :class="{ 'is-open': showAbout }"
+                            >
+                                <path
+                                    d="M5 7l5 6 5-6"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                />
+                            </svg>
+                            <span>{{
+                                showAbout ? "Esconder" : "Mostrar"
+                            }}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div v-if="showAbout" class="panel__body about__content">
+                <article class="about__block">
+                    <p class="about__label">O que e</p>
+                    <h3>Tibia Market Desk</h3>
+                    <p>
+                        Dashboard local para simular, salvar e acompanhar trades
+                        do mercado do Tibia com calculo de fees, spread e
+                        encadeamento de undercuts.
+                    </p>
+                </article>
+                <article class="about__block">
+                    <p class="about__label">Como usar</p>
+                    <h3>Passo a passo rapido</h3>
+                    <ul class="about__list">
+                        <li>
+                            Escolha um item (ou cadastre um nome novo) e
+                            preencha bid/ask e unidades.
+                        </li>
+                        <li>
+                            Ajuste as taxas globais ou por ordem; o resumo de
+                            metricas calcula spread, fees e real profit antes
+                            de salvar.
+                        </li>
+                        <li>
+                            Grave a ordem. Use "Criar undercut" em qualquer
+                            trade para herdar fees e manter o historico ligado.
+                        </li>
+                        <li>
+                            Filtre por item nos paineis de totais, graficos e
+                            historico para comparar desempenhos.
+                        </li>
+                        <li>
+                            Use o backup para exportar/importar os dados locais
+                            ou limpar tudo quando quiser recomeçar.
+                        </li>
+                    </ul>
+                </article>
+            </div>
+        </section>
 
         <section class="panel totals">
             <div class="panel__header">
@@ -2069,7 +2159,10 @@ body {
 }
 
 .hero {
-    background: #030305;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: rgba(3, 3, 5, 0.9);
     color: #f8fafc;
     border-bottom: solid 1px #3b1725;
     padding: 8px;
@@ -2078,6 +2171,8 @@ body {
     margin-bottom: 40px;
     justify-content: space-between;
     gap: 16px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 6px 28px rgba(0, 0, 0, 0.25);
 }
 
 .hero__left {
@@ -2096,6 +2191,81 @@ body {
     align-items: center;
     gap: 12px;
     flex-wrap: wrap;
+}
+
+.hero__github {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1px solid #3b1725;
+    background: radial-gradient(circle at 15% 20%, #0f172a, #0a0f1c);
+    color: #e2e8f0;
+    text-decoration: none;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    transition:
+        border-color 0.2s ease,
+        color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.hero__github:hover {
+    border-color: #0ea5e9;
+    color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+.hero__github-icon {
+    width: 18px;
+    height: 18px;
+}
+
+.about__content {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.about__block {
+    padding: 14px;
+    border: 1px solid #1f2937;
+    background: radial-gradient(circle at 0% 0%, #0d1425, #09060f 60%);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    display: grid;
+    gap: 8px;
+}
+
+.about__label {
+    margin: 0;
+    color: #94a3b8;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    text-transform: uppercase;
+    font-size: 12px;
+}
+
+.about__block h3 {
+    margin: 0;
+    color: #e2e8f0;
+}
+
+.about__block p {
+    margin: 0;
+    color: #cbd5e1;
+}
+
+.about__list {
+    margin: 0;
+    padding-left: 18px;
+    color: #e2e8f0;
+    display: grid;
+    gap: 6px;
+}
+
+.about__list li {
+    line-height: 1.4;
 }
 
 .hero__filter {
