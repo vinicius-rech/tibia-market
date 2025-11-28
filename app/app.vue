@@ -33,6 +33,7 @@ type TradeInput = {
     sellUnits: number;
     parentTradeId: number | null;
     note: string;
+    duplicationCount: number;
 };
 
 type Trade = {
@@ -80,6 +81,7 @@ const globalSellFeePct = ref(2);
 const showSuggestions = ref(false);
 const highlightedSuggestion = ref(0);
 const SUGGESTION_LIMIT = 8;
+const MAX_DUPLICATIONS = 50;
 const VISIBILITY_STORAGE_KEY = "tibia-trader-visibility";
 let hideSuggestionsTimeout: number | null = null;
 
@@ -152,6 +154,7 @@ const form = reactive<TradeInput>({
     sellUnits: 1,
     parentTradeId: null,
     note: "",
+    duplicationCount: 1,
 });
 
 const selectedParentId = computed(() => {
@@ -240,6 +243,12 @@ function filterTradesByItem(list: Trade[], item: string) {
     if (!item) return list;
     const needle = item.toLowerCase();
     return list.filter((trade) => trade.item.toLowerCase() === needle);
+}
+
+function clampDuplication(value: number) {
+    const numeric = Math.floor(toNumber(value));
+    if (!Number.isFinite(numeric) || numeric < 1) return 1;
+    return Math.min(numeric, MAX_DUPLICATIONS);
 }
 
 function percentToDecimal(value: number) {
@@ -759,6 +768,10 @@ async function submitTrade() {
 
         await ensureItemExists(itemName);
 
+        const duplication = editingTradeId.value
+            ? 1
+            : clampDuplication(form.duplicationCount);
+
         const metrics = buildMetrics(
             form,
             parentFee.value,
@@ -786,8 +799,7 @@ async function submitTrade() {
         ];
 
         const isEditing = editingTradeId.value !== null;
-        const query = isEditing
-            ? `
+        const updateQuery = `
         UPDATE trades
         SET
           item = $1,
@@ -813,8 +825,8 @@ async function submitTrade() {
           buy_trade_value, trade_value, total_fees, profit,
           inherited_fees, cumulative_fees, real_profit, parent_trade_id, note,
           created_at;
-      `
-            : `
+      `;
+        const insertQuery = `
         INSERT INTO trades (
           item, bid, ask, spread, buy_fee, sell_fee, buy_units, sell_units,
           buy_trade_value, trade_value, total_fees, profit,
@@ -831,21 +843,30 @@ async function submitTrade() {
           created_at;
       `;
 
-        const params = isEditing ? [...values, editingTradeId.value] : values;
-
-        const result = await $pglite.query<TradeRow>(query, params);
-        const saved = mapTradeRow(result.rows[0]);
-
         if (isEditing) {
+            const result = await $pglite.query<TradeRow>(
+                updateQuery,
+                [...values, editingTradeId.value],
+            );
+            const saved = mapTradeRow(result.rows[0]);
             trades.value = trades.value.map((trade) =>
                 trade.id === saved.id ? saved : trade,
             );
             editingTradeId.value = null;
+            resetForm(saved.item);
         } else {
-            trades.value.unshift(saved);
+            const inserted: Trade[] = [];
+            for (let i = 0; i < duplication; i += 1) {
+                const result = await $pglite.query<TradeRow>(
+                    insertQuery,
+                    values,
+                );
+                inserted.push(mapTradeRow(result.rows[0]));
+            }
+            trades.value.unshift(...inserted);
+            resetForm(itemName);
         }
 
-        resetForm(saved.item);
         showSuggestions.value = false;
         showTradeModal.value = false;
     } catch (err) {
@@ -864,6 +885,7 @@ function resetForm(nextItem = "") {
     form.sellUnits = 1;
     form.parentTradeId = null;
     form.note = "";
+    form.duplicationCount = 1;
 }
 
 function prefillUndercut(base: Trade) {
@@ -875,6 +897,7 @@ function prefillUndercut(base: Trade) {
     form.sellUnits = base.sellUnits;
     form.parentTradeId = base.id;
     form.note = `Undercut de #${base.id}`;
+    form.duplicationCount = 1;
     showTradeModal.value = true;
 }
 
@@ -887,6 +910,7 @@ function startEdit(trade: Trade) {
     form.sellUnits = trade.sellUnits;
     form.parentTradeId = trade.parentTradeId;
     form.note = trade.note ?? "";
+    form.duplicationCount = 1;
     showTradeModal.value = true;
 }
 
@@ -1310,6 +1334,22 @@ function formatUnits(value: number) {
                                 </p>
                             </div>
                             <div class="field">
+                                <label>Duplicar ordens (quantidade)</label>
+                                <input
+                                    v-model.number="form.duplicationCount"
+                                    type="number"
+                                    min="1"
+                                    :max="MAX_DUPLICATIONS"
+                                    step="1"
+                                    :disabled="!!editingTradeId"
+                                />
+                                <p class="helper">
+                                    Cria copias independentes ao salvar a ordem.
+                                    Ignorado ao editar. Limite de
+                                    {{ MAX_DUPLICATIONS }} copias.
+                                </p>
+                            </div>
+                            <div class="field">
                                 <label>Observacao</label>
                                 <textarea
                                     v-model="form.note"
@@ -1538,7 +1578,7 @@ function formatUnits(value: number) {
                 <div class="panel__header__title">
                     <p class="eyebrow">Insights</p>
                     <div class="panel__title-row">
-                        <h2>Graficos rapidos</h2>
+                        <h2>Graficos rápidos</h2>
                         <button
                             class="panel__toggle"
                             type="button"
@@ -2346,7 +2386,7 @@ textarea {
 }
 
 .trade-card:hover {
-    background: #141013;
+    background: radial-gradient(circle at 0% 0%, #0d1425, #09060f 60%);
     border-radius: 5px;
 }
 
