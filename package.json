@@ -17,6 +17,7 @@
     "@nuxt/scripts": "^0.13.0",
     "@nuxt/ui": "^4.2.1",
     "@unhead/vue": "^2.0.19",
+    "@vercel/analytics": "^1.5.0",
     "eslint": "^9.39.1",
     "nuxt": "^4.2.1",
     "typescript": "^5.9.3",

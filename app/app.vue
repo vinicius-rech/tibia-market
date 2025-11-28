@@ -1029,7 +1029,7 @@ async function deleteTrade(tradeId: number) {
 
 function describeParent(trade: Trade) {
     if (!trade.parentTradeId) {
-        return "Ordem primaria";
+        return "Primaria";
     }
 
     const parent = trades.value.find(
@@ -1378,8 +1378,8 @@ function formatUnits(value: number) {
                                     <input
                                         v-model.number="form.buyUnits"
                                         type="number"
-                                        min="1"
-                                        step="1"
+                                        min="0"
+                                        step="5"
                                         required
                                     />
                                 </div>
