@@ -2404,9 +2404,13 @@ textarea {
 }
 
 .card-actions {
-    display: flex;
+    display: none;
     gap: 6px;
     flex-wrap: wrap;
+}
+
+.trade-card:hover .card-actions {
+    display: flex;
 }
 
 .trade-card__grid {
