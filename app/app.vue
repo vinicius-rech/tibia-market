@@ -1017,11 +1017,7 @@ async function deleteTrade(tradeId: number) {
         await $pglite.query("DELETE FROM trades WHERE id = $1;", [tradeId]);
 
         trades.value = trades.value
-            .map((trade) =>
-                trade.parentTradeId === tradeId
-                    ? { ...trade, parentTradeId: null }
-                    : trade,
-            )
+            .map((trade) => trade.parentTradeId === tradeId  ? { ...trade, parentTradeId: null }  : trade)
             .filter((trade) => trade.id !== tradeId);
 
         await loadTrades();
@@ -1046,10 +1042,12 @@ function describeParent(trade: Trade) {
 
 function formatGold(value: number) {
     const rounded = Math.round(value);
+
     const formatted = rounded.toLocaleString("pt-BR", {
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
     });
+
     return `🪙 ${formatted}`;
 }
 
@@ -1492,35 +1490,25 @@ function formatUnits(value: number) {
                         <div class="metrics">
                             <div class="metric">
                                 <p>Spread</p>
-                                <strong>{{
-                                    formatGold(derived.spread)
-                                }}</strong>
+                                <strong>{{ formatGold(derived.spread) }}</strong>
                             </div>
                             <div class="metric">
                                 <p>Buy trade value</p>
-                                <strong>{{
-                                    formatGold(derived.buyTradeValue)
-                                }}</strong>
-                                <span
-                                    >{{ formatUnits(form.buyUnits) }} un · fee
-                                    {{ derived.buyFee * 100 }}%</span
-                                >
+                                <strong>{{ formatGold(derived.buyTradeValue) }}</strong>
+                                <span>
+                                  {{ formatUnits(form.buyUnits) }} un · fee {{ derived.buyFee * 100 }}%
+                                </span>
                             </div>
                             <div class="metric">
                                 <p>Trade value</p>
-                                <strong>{{
-                                    formatGold(derived.tradeValue)
-                                }}</strong>
-                                <span
-                                    >{{ formatUnits(form.sellUnits) }} un · fee
-                                    {{ derived.sellFee * 100 }}%</span
-                                >
+                                <strong>{{ formatGold(derived.tradeValue) }}</strong>
+                                <span>{{ formatUnits(form.sellUnits) }} un · fee
+                                    {{ derived.sellFee * 100 }}%
+                                </span>
                             </div>
                             <div class="metric">
                                 <p>Total fees</p>
-                                <strong>{{
-                                    formatGold(derived.totalFees)
-                                }}</strong>
+                                <strong>{{ (derived.cumulativeFees ?? derived.totalFees) }}</strong>
                                 <span>Inclui compra + venda</span>
                             </div>
                             <div class="metric">
@@ -1538,9 +1526,7 @@ function formatUnits(value: number) {
                                 }"
                             >
                                 <p>Real profit</p>
-                                <strong>{{
-                                    formatGold(derived.realProfit)
-                                }}</strong>
+                                <strong>{{ formatGold(derived.realProfit) }}</strong>
                                 <span>Lucro liquido (taxas + herdadas)</span>
                             </div>
                         </div>
@@ -1602,9 +1588,7 @@ function formatUnits(value: number) {
                                     stroke-width="2"
                                 />
                             </svg>
-                            <span>{{
-                                showAbout ? "Esconder" : "Mostrar"
-                            }}</span>
+                            <span>{{ showAbout ? "Esconder" : "Mostrar" }}</span>
                         </button>
                     </div>
                 </div>
@@ -2083,38 +2067,27 @@ function formatUnits(value: number) {
                                 <strong>{{
                                     formatGold(trade.buyTradeValue)
                                 }}</strong>
-                                <span
-                                    >{{ formatUnits(trade.buyUnits) }} un · fee
-                                    {{ formatPercent(trade.buyFee) }}</span
+                                <span>
+                                  {{ formatUnits(trade.buyUnits) }} un · fee {{ formatPercent(trade.buyFee) }}</span
                                 >
                             </div>
                             <div class="cell">
                                 <p>Sell order</p>
-                                <strong>{{
-                                    formatGold(trade.tradeValue)
-                                }}</strong>
-                                <span
-                                    >{{ formatUnits(trade.sellUnits) }} un · fee
-                                    {{ formatPercent(trade.sellFee) }}</span
+                                <strong>{{ formatGold(trade.tradeValue) }}</strong>
+                                <span>
+                                    {{ formatUnits(trade.sellUnits) }} un · fee
+                                    {{ formatPercent(trade.sellFee) }}
+                                </span
                                 >
                             </div>
                             <div class="cell">
                                 <p>Fees</p>
-                                <strong>{{
-                                    formatGold(trade.totalFees)
-                                }}</strong>
-                                <span
-                                    >Herdadas:
-                                    {{ formatGold(trade.inheritedFees) }}</span
-                                >
+                                <strong>{{ formatGold( derived.cumulativeFees ?? trade.totalFees) }}</strong>
+                                <span>Herdadas:{{ formatGold(trade.inheritedFees) }}</span>
                             </div>
                             <div class="cell">
                                 <p>Registrado</p>
-                                <strong>{{
-                                    new Date(trade.createdAt).toLocaleString(
-                                        "pt-BR",
-                                    )
-                                }}</strong>
+                                <strong>{{ new Date(trade.createdAt).toLocaleString("pt-BR") }}</strong>
                                 <span v-if="trade.note">{{ trade.note }}</span>
                             </div>
 
@@ -2126,9 +2099,7 @@ function formatUnits(value: number) {
                                 }"
                             >
                                 <p>Real Profit</p>
-                                <strong>{{
-                                    formatGold(trade.realProfit)
-                                }}</strong>
+                                <strong>{{ formatGold(trade.realProfit) }}</strong>
                             </div>
                         </div>
                     </article>
