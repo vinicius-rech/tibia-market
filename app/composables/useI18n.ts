@@ -1,4 +1,4 @@
-import { computed } from "vue";
+import { computed, onMounted } from "vue";
 import {
   defaultLocale,
   messages,
@@ -24,6 +24,13 @@ export function useI18n() {
   const currentMessages = computed(
     () => messages[locale.value] ?? messages[defaultLocale],
   );
+
+  onMounted(() => {
+    const stored = readStoredLocale();
+    if (stored !== locale.value) {
+      locale.value = stored;
+    }
+  });
 
   const localeOptions = computed(() =>
     Object.entries(messages).map(([code, data]) => ({

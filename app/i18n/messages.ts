@@ -535,4 +535,4 @@ export const messages: Record<LocaleKey, Messages> = {
   },
 };
 
-export const defaultLocale: LocaleKey = "pt";
+export const defaultLocale: LocaleKey = "en";
