@@ -610,6 +610,7 @@ function hydrateVisibilityFromStorage() {
             showCharts?: boolean;
             showTrades?: boolean;
             showTotals?: boolean;
+            showAbout?: boolean;
         };
 
         if (typeof parsed.showCharts === "boolean") {
@@ -622,6 +623,10 @@ function hydrateVisibilityFromStorage() {
 
         if (typeof parsed.showTotals === "boolean") {
             showTotals.value = parsed.showTotals;
+        }
+
+        if (typeof parsed.showAbout === "boolean") {
+            showAbout.value = parsed.showAbout;
         }
     } catch {
         // ignore parse errors
@@ -669,7 +674,7 @@ watch([globalBuyFeePct, globalSellFeePct], ([buy, sell]) => {
     );
 });
 
-watch([showCharts, showTrades, showTotals], ([charts, trades, totals]) => {
+watch([showCharts, showTrades, showTotals, showAbout], ([charts, trades, totals, about]) => {
     if (typeof window === "undefined") return;
     window.localStorage.setItem(
         VISIBILITY_STORAGE_KEY,
@@ -677,6 +682,7 @@ watch([showCharts, showTrades, showTotals], ([charts, trades, totals]) => {
             showCharts: charts,
             showTrades: trades,
             showTotals: totals,
+            showAbout: about,
         }),
     );
 });
@@ -1007,113 +1013,122 @@ function formatUnits(value: number) {
 </script>
 
 <template>
-    <div class="layout">
-        <Analytics />
-        <AppHero
-            :items="items"
-            :global-item-filter="globalItemFilter"
-            @update:global-item-filter="(value) => (globalItemFilter = value)"
-            @new-trade="openNewTradeModal"
-            @open-fee="showFeeModal = true"
-            @open-backup="showBackupModal = true"
-        />
+    <div class="app-shell">
+        <div v-if="loading" class="loading-overlay">
+            <div class="loading-card">
+                <img class="loading-logo" src="/logo.png" alt="TMD" />
+                <p class="loading-text">{{ t("common.loading") }}</p>
+            </div>
+        </div>
 
-        <FeeModal
-            :open="showFeeModal"
-            :global-buy-fee-pct="globalBuyFeePct"
-            :global-sell-fee-pct="globalSellFeePct"
-            @update:global-buy-fee-pct="(value) => (globalBuyFeePct = value)"
-            @update:global-sell-fee-pct="(value) => (globalSellFeePct = value)"
-            @close="showFeeModal = false"
-        />
+        <div v-else class="layout">
+            <Analytics />
+            <AppHero
+                :items="items"
+                :global-item-filter="globalItemFilter"
+                @update:global-item-filter="(value) => (globalItemFilter = value)"
+                @new-trade="openNewTradeModal"
+                @open-fee="showFeeModal = true"
+                @open-backup="showBackupModal = true"
+            />
 
-        <BackupModal
-            :open="showBackupModal"
-            :import-input="importInput"
-            :error-message="error"
-            @close="showBackupModal = false"
-            @export="exportBackup"
-            @import="handleImportFile"
-            @reset="resetDatabase"
-        />
+            <FeeModal
+                :open="showFeeModal"
+                :global-buy-fee-pct="globalBuyFeePct"
+                :global-sell-fee-pct="globalSellFeePct"
+                @update:global-buy-fee-pct="(value) => (globalBuyFeePct = value)"
+                @update:global-sell-fee-pct="(value) => (globalSellFeePct = value)"
+                @close="showFeeModal = false"
+            />
 
-        <TradeModal
-            v-model:show="showTradeModal"
-            v-model:form="form"
-            :items="items"
-            :trades="trades"
-            :editing-trade-id="editingTradeId"
-            :saving="saving"
-            :filtered-items="filteredItems"
-            :show-suggestions="showSuggestions"
-            :highlighted-suggestion="highlightedSuggestion"
-            :max-duplications="MAX_DUPLICATIONS"
-            :derived="derived"
-            :selected-parent-id="selectedParentId"
-            :can-register-item="canRegisterItem"
-            :format-gold="formatGold"
-            :format-units="formatUnits"
-            :on-submit="submitTrade"
-            :on-register-item="registerItem"
-            :on-select-suggestion="selectSuggestion"
-            :on-move-suggestion="moveSuggestion"
-            :on-tab-complete="handleTabComplete"
-            :on-delete-suggestion="handleDeleteSuggestion"
-            :on-handle-item-input="handleItemInput"
-            :on-handle-item-focus="handleItemFocus"
-            :on-handle-item-blur="handleItemBlur"
-            @close="closeTradeModal"
-        />
+            <BackupModal
+                :open="showBackupModal"
+                :import-input="importInput"
+                :error-message="error"
+                @close="showBackupModal = false"
+                @export="exportBackup"
+                @import="handleImportFile"
+                @reset="resetDatabase"
+            />
 
-        <AboutPanel
-            :show-about="showAbout"
-            @update:show-about="(value) => (showAbout = value)"
-        />
+            <TradeModal
+                v-model:show="showTradeModal"
+                v-model:form="form"
+                :items="items"
+                :trades="trades"
+                :editing-trade-id="editingTradeId"
+                :saving="saving"
+                :filtered-items="filteredItems"
+                :show-suggestions="showSuggestions"
+                :highlighted-suggestion="highlightedSuggestion"
+                :max-duplications="MAX_DUPLICATIONS"
+                :derived="derived"
+                :selected-parent-id="selectedParentId"
+                :can-register-item="canRegisterItem"
+                :format-gold="formatGold"
+                :format-units="formatUnits"
+                :on-submit="submitTrade"
+                :on-register-item="registerItem"
+                :on-select-suggestion="selectSuggestion"
+                :on-move-suggestion="moveSuggestion"
+                :on-tab-complete="handleTabComplete"
+                :on-delete-suggestion="handleDeleteSuggestion"
+                :on-handle-item-input="handleItemInput"
+                :on-handle-item-focus="handleItemFocus"
+                :on-handle-item-blur="handleItemBlur"
+                @close="closeTradeModal"
+            />
 
-        <TotalsPanel
-            :show-totals="showTotals"
-            :items="items"
-            :selected-totals-item="selectedTotalsItem"
-            :totals-snapshot="totalsSnapshot"
-            :has-trades="trades.length > 0"
-            :has-filtered-trades="filteredTotalsTrades.length > 0"
-            :format-gold="formatGold"
-            :format-units="formatUnits"
-            @update:show-totals="(value) => (showTotals = value)"
-            @update:selected-totals-item="(value) => (selectedTotalsItem = value)"
-        />
+            <AboutPanel
+                :show-about="showAbout"
+                @update:show-about="(value) => (showAbout = value)"
+            />
 
-        <ChartsPanel
-            :show-charts="showCharts"
-            :items="items"
-            :selected-chart-item="selectedChartItem"
-            :trades-length="trades.length"
-            :chart-series="chartSeries"
-            :chart-stats="chartStats"
-            :build-spark-path="buildSparkPath"
-            :format-gold="formatGold"
-            :format-units="formatUnits"
-            @update:show-charts="(value) => (showCharts = value)"
-            @update:selected-chart-item="(value) => (selectedChartItem = value)"
-        />
+            <TotalsPanel
+                :show-totals="showTotals"
+                :items="items"
+                :selected-totals-item="selectedTotalsItem"
+                :totals-snapshot="totalsSnapshot"
+                :has-trades="trades.length > 0"
+                :has-filtered-trades="filteredTotalsTrades.length > 0"
+                :format-gold="formatGold"
+                :format-units="formatUnits"
+                @update:show-totals="(value) => (showTotals = value)"
+                @update:selected-totals-item="(value) => (selectedTotalsItem = value)"
+            />
 
-        <TradesPanel
-            :show-trades="showTrades"
-            :items="items"
-            :selected-list-item="selectedListItem"
-            :filtered-list-trades="filteredListTrades"
-            :has-trades="trades.length > 0"
-            :loading="loading"
-            :format-gold="formatGold"
-            :format-units="formatUnits"
-            :format-percent="formatPercent"
-            :describe-parent="describeParent"
-            @update:show-trades="(value) => (showTrades = value)"
-            @update:selected-list-item="(value) => (selectedListItem = value)"
-            @prefill-undercut="prefillUndercut"
-            @edit="startEdit"
-            @delete="deleteTrade"
-        />
+            <ChartsPanel
+                :show-charts="showCharts"
+                :items="items"
+                :selected-chart-item="selectedChartItem"
+                :trades-length="trades.length"
+                :chart-series="chartSeries"
+                :chart-stats="chartStats"
+                :build-spark-path="buildSparkPath"
+                :format-gold="formatGold"
+                :format-units="formatUnits"
+                @update:show-charts="(value) => (showCharts = value)"
+                @update:selected-chart-item="(value) => (selectedChartItem = value)"
+            />
+
+            <TradesPanel
+                :show-trades="showTrades"
+                :items="items"
+                :selected-list-item="selectedListItem"
+                :filtered-list-trades="filteredListTrades"
+                :has-trades="trades.length > 0"
+                :loading="loading"
+                :format-gold="formatGold"
+                :format-units="formatUnits"
+                :format-percent="formatPercent"
+                :describe-parent="describeParent"
+                @update:show-trades="(value) => (showTrades = value)"
+                @update:selected-list-item="(value) => (selectedListItem = value)"
+                @prefill-undercut="prefillUndercut"
+                @edit="startEdit"
+                @delete="deleteTrade"
+            />
+        </div>
     </div>
 </template>
 <style src="./assets/main.css"></style>

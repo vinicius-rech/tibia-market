@@ -4,6 +4,64 @@ body {
     position: relative;
 }
 
+.app-shell {
+    min-height: 100dvh;
+    background-color: #060608;
+}
+
+.loading-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at 30% 30%, rgba(70, 30, 50, 0.2), #020305 65%);
+    z-index: 999;
+}
+
+.loading-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 28px 34px;
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(145deg, rgba(8, 10, 20, 0.92), rgba(12, 6, 18, 0.92));
+    box-shadow: 0 12px 60px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+}
+
+.loading-logo {
+    width: 86px;
+    height: 86px;
+    object-fit: contain;
+    filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.35));
+}
+
+.loading-text {
+    margin: 0;
+    color: #e2e8f0;
+    font-size: 15px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    animation: loadingPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes loadingPulse {
+    0% {
+        opacity: 0.3;
+        transform: translateY(0);
+    }
+    50% {
+        opacity: 1;
+        transform: translateY(-6px);
+    }
+    100% {
+        opacity: 0.3;
+        transform: translateY(0);
+    }
+}
+
 .layout {
     max-width: 100dvw;
     min-height: 100dvh;
@@ -122,21 +180,8 @@ body {
 }
 
 .hero__github {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    border-radius: 999px;
-    border: 1px solid #3b1725;
-    background: radial-gradient(circle at 15% 20%, #0f172a, #0a0f1c);
     color: #e2e8f0;
     text-decoration: none;
-    font-weight: 700;
-    letter-spacing: 0.2px;
-    transition:
-        border-color 0.2s ease,
-        color 0.2s ease,
-        box-shadow 0.2s ease;
 }
 
 .hero__github:hover {
@@ -146,8 +191,8 @@ body {
 }
 
 .hero__github-icon {
-    width: 18px;
-    height: 18px;
+    width: 25px;
+    height: 25px;
 }
 
 .about__content {

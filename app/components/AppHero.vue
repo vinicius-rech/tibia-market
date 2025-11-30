@@ -59,15 +59,6 @@ const activeLocale = computed(() =>
         <button class="ghost" type="button" @click="emit('open-backup')">
           {{ t("hero.backup") }}
         </button>
-        <a
-            class="hero__github"
-            href="https://github.com/vinicius-rech/tibia-market"
-            target="_blank"
-            rel="noopener noreferrer"
-        >
-          <UIcon name="i-simple-icons-github" class="hero__github-icon" />
-          {{ messages.common.github }}
-        </a>
         <div class="hero__lang">
           <div class="hero__lang-select-wrap">
             <select v-model="selectedLocale" class="hero__lang-select">
@@ -81,6 +72,14 @@ const activeLocale = computed(() =>
             </select>
           </div>
         </div>
+        <a
+            class="hero__github"
+            href="https://github.com/vinicius-rech/tibia-market"
+            target="_blank"
+            rel="noopener noreferrer"
+        >
+          <UIcon name="i-simple-icons-github" class="hero__github-icon" />
+        </a>
       </div>
     </div>
   </header>

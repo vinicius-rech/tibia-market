@@ -36,13 +36,27 @@ const emit = defineEmits<{
 }>();
 
 const { messages, t } = useI18n();
+
+function handleKeydown(event: KeyboardEvent) {
+  if (!show.value || event.key !== "Escape") return;
+  emit("close");
+}
+
+onMounted(() => {
+  if (typeof window === "undefined") return;
+  window.addEventListener("keydown", handleKeydown);
+});
+
+onBeforeUnmount(() => {
+  if (typeof window === "undefined") return;
+  window.removeEventListener("keydown", handleKeydown);
+});
 </script>
 
 <template>
   <div
     v-if="show"
     class="modal-backdrop"
-    @click.self="emit('close')"
   >
     <div class="modal modal--wide">
       <div class="modal__header">
@@ -57,15 +71,6 @@ const { messages, t } = useI18n();
           <h3>{{ form.item || messages.tradeModal.defaultTitle }}</h3>
         </div>
         <div class="panel__actions">
-          <button
-            v-if="form.item"
-            class="ghost inline"
-            type="button"
-            :disabled="!canRegisterItem"
-            @click="onRegisterItem"
-          >
-            {{ t("tradeModal.registerItem", { item: form.item.trim() }) }}
-          </button>
           <button
             class="ghost"
             type="button"
@@ -117,6 +122,15 @@ const { messages, t } = useI18n();
                 </ul>
               </div>
               <p class="helper">{{ messages.tradeModal.helper }}</p>
+              <button
+                v-if="canRegisterItem"
+                class="ghost inline"
+                type="button"
+                :disabled="saving"
+                @click="onRegisterItem"
+              >
+                {{ t("tradeModal.registerItem", { item: form.item.trim() }) }}
+              </button>
             </div>
             <div class="field two-col">
               <div>
