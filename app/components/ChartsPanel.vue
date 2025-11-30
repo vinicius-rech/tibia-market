@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import { useI18n } from "~/composables/useI18n";
 
 const props = defineProps<{
   showCharts: boolean;
@@ -27,20 +28,22 @@ const selection = computed({
   get: () => props.selectedChartItem,
   set: (value: string) => emit("update:selectedChartItem", value),
 });
+
+const { messages } = useI18n();
 </script>
 
 <template>
   <section class="panel charts">
     <div class="panel__header">
       <div class="panel__header__title">
-        <p class="eyebrow">Insights</p>
+        <p class="eyebrow">{{ messages.charts.eyebrow }}</p>
         <div class="panel__title-row">
-          <h2>Graficos rapidos</h2>
+          <h2>{{ messages.charts.title }}</h2>
           <button
             class="panel__toggle"
             type="button"
             :aria-pressed="open"
-            :title="open ? 'Recolher graficos' : 'Expandir graficos'"
+            :title="open ? messages.charts.collapseTitle : messages.charts.expandTitle"
             @click="open = !open"
           >
             <svg
@@ -58,13 +61,13 @@ const selection = computed({
                 stroke-width="2"
               />
             </svg>
-            <span>{{ open ? "Esconder" : "Mostrar" }}</span>
+            <span>{{ open ? messages.common.hide : messages.common.show }}</span>
           </button>
         </div>
       </div>
       <div class="panel__actions">
         <select v-model="selection">
-          <option value="">Todos os itens</option>
+          <option value="">{{ messages.common.allItems }}</option>
           <option v-for="item in items" :key="item" :value="item">
             {{ item }}
           </option>
@@ -73,12 +76,12 @@ const selection = computed({
     </div>
     <div v-if="open" class="panel__body">
       <p v-if="tradesLength === 0" class="helper">
-        Cadastre ordens para visualizar historico e tendencias.
+        {{ messages.charts.empty }}
       </p>
       <div v-else class="charts-grid">
         <article class="chart-card">
           <div class="chart-card__header">
-            <p>Real profit</p>
+            <p>{{ messages.charts.cards.profit }}</p>
             <strong>{{ formatGold(props.chartStats.profit.latest) }}</strong>
             <span
               :class="{
@@ -95,7 +98,7 @@ const selection = computed({
         </article>
         <article class="chart-card">
           <div class="chart-card__header">
-            <p>Spread</p>
+            <p>{{ messages.charts.cards.spread }}</p>
             <strong>{{ formatGold(props.chartStats.spread.latest) }}</strong>
             <span
               :class="{
@@ -112,7 +115,7 @@ const selection = computed({
         </article>
         <article class="chart-card">
           <div class="chart-card__header">
-            <p>Valor de compra</p>
+            <p>{{ messages.charts.cards.buyValue }}</p>
             <strong>{{ formatGold(props.chartStats.buyValue.latest) }}</strong>
             <span
               :class="{
@@ -129,7 +132,7 @@ const selection = computed({
         </article>
         <article class="chart-card">
           <div class="chart-card__header">
-            <p>Valor de venda</p>
+            <p>{{ messages.charts.cards.sellValue }}</p>
             <strong>{{ formatGold(props.chartStats.sellValue.latest) }}</strong>
             <span
               :class="{
@@ -146,7 +149,7 @@ const selection = computed({
         </article>
         <article class="chart-card">
           <div class="chart-card__header">
-            <p>Taxas</p>
+            <p>{{ messages.charts.cards.fees }}</p>
             <strong>{{ formatGold(props.chartStats.fees.latest) }}</strong>
             <span
               :class="{
@@ -163,7 +166,7 @@ const selection = computed({
         </article>
         <article class="chart-card">
           <div class="chart-card__header">
-            <p>Unidades totais</p>
+            <p>{{ messages.charts.cards.units }}</p>
             <strong>{{ formatUnits(props.chartStats.units.latest) }}</strong>
             <span
               :class="{

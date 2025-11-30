@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import { useI18n } from "~/composables/useI18n";
+
 const props = defineProps<{
   items: string[];
   globalItemFilter: string;
@@ -16,6 +18,18 @@ const globalFilter = computed({
   get: () => props.globalItemFilter,
   set: (value: string) => emit("update:globalItemFilter", value),
 });
+
+const { t, locale, setLocale, localeOptions, messages } = useI18n();
+
+const selectedLocale = computed({
+  get: () => locale.value,
+  set: (value: string) => setLocale(value as any),
+});
+
+const activeLocale = computed(() =>
+  localeOptions.value.find((entry) => entry.code === locale.value) ??
+  localeOptions.value[0],
+);
 </script>
 
 <template>
@@ -23,26 +37,40 @@ const globalFilter = computed({
     <div class="hero__left">
       <p class="eyebrow">
         <img class="logo-mark" src="/logo.png" alt="TMD" />
-        Tibia Artisan Studio
+        {{ messages.common.appName }}
       </p>
     </div>
     <div class="hero__actions">
+      <div class="hero__lang">
+        <p class="hero__lang-label">{{ t("hero.language") }}</p>
+        <div class="hero__lang-select-wrap">
+          <select v-model="selectedLocale" class="hero__lang-select">
+            <option
+              v-for="option in localeOptions"
+              :key="option.code"
+              :value="option.code"
+            >
+              {{ option.flag }} {{ option.label }}
+            </option>
+          </select>
+        </div>
+      </div>
       <div class="hero__filter">
         <select id="globalFilter" v-model="globalFilter">
-          <option value="">Todos os itens</option>
+          <option value="">{{ messages.common.allItems }}</option>
           <option v-for="item in items" :key="item" :value="item">
             {{ item }}
           </option>
         </select>
       </div>
       <button class="primary" type="button" @click="emit('new-trade')">
-        Nova ordem
+        {{ t("hero.newTrade") }}
       </button>
       <button class="ghost" type="button" @click="emit('open-fee')">
-        Taxas
+        {{ t("hero.fees") }}
       </button>
       <button class="ghost" type="button" @click="emit('open-backup')">
-        Backup
+        {{ t("hero.backup") }}
       </button>
       <a
         class="hero__github"
@@ -51,7 +79,7 @@ const globalFilter = computed({
         rel="noopener noreferrer"
       >
         <UIcon name="i-simple-icons-github" class="hero__github-icon" />
-        Github
+        {{ messages.common.github }}
       </a>
     </div>
   </header>

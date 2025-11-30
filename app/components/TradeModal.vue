@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useI18n } from "~/composables/useI18n";
 import type { Metrics, Trade, TradeInput } from "~/types/trade";
 
 const show = defineModel<boolean>("show");
@@ -33,6 +34,8 @@ const emit = defineEmits<{
   (event: "close"): void;
   (event: "reset-form", value?: string): void;
 }>();
+
+const { messages, t } = useI18n();
 </script>
 
 <template>
@@ -45,9 +48,13 @@ const emit = defineEmits<{
       <div class="modal__header">
         <div>
           <p class="eyebrow">
-            {{ editingTradeId ? `Editar ordem #${editingTradeId}` : "Nova ordem" }}
+            {{
+              editingTradeId
+                ? t("tradeModal.eyebrowEdit", { id: editingTradeId })
+                : messages.tradeModal.eyebrowNew
+            }}
           </p>
-          <h3>{{ form.item || "Defina o item" }}</h3>
+          <h3>{{ form.item || messages.tradeModal.defaultTitle }}</h3>
         </div>
         <div class="panel__actions">
           <button
@@ -57,14 +64,14 @@ const emit = defineEmits<{
             :disabled="!canRegisterItem"
             @click="onRegisterItem"
           >
-            Cadastrar "{{ form.item.trim() }}"
+            {{ t("tradeModal.registerItem", { item: form.item.trim() }) }}
           </button>
           <button
             class="ghost"
             type="button"
             @click="emit('close')"
           >
-            Fechar
+            {{ messages.common.close }}
           </button>
         </div>
       </div>
@@ -72,7 +79,7 @@ const emit = defineEmits<{
         <div class="grid">
           <form class="form" @submit.prevent="onSubmit">
             <div class="field">
-              <label for="item">Item</label>
+              <label for="item">{{ messages.tradeModal.itemLabel }}</label>
               <div class="autocomplete">
                 <input
                   id="item"
@@ -109,48 +116,48 @@ const emit = defineEmits<{
                   </li>
                 </ul>
               </div>
-              <p class="helper">Use setas ou Tab para completar sugestoes.</p>
+              <p class="helper">{{ messages.tradeModal.helper }}</p>
             </div>
             <div class="field two-col">
               <div>
-                <label>Bid (compra)</label>
+                <label>{{ messages.tradeModal.bid }}</label>
                 <input v-model.number="form.bid" type="number" min="0" step="1" required />
               </div>
               <div>
-                <label>Ask (venda)</label>
+                <label>{{ messages.tradeModal.ask }}</label>
                 <input v-model.number="form.ask" type="number" min="0" step="1" required />
               </div>
             </div>
             <div class="field two-col">
               <div>
-                <label>Buy units</label>
+                <label>{{ messages.tradeModal.buyUnits }}</label>
                 <input v-model.number="form.buyUnits" type="number" min="0" step="1" required />
               </div>
               <div>
-                <label>Sell units</label>
+                <label>{{ messages.tradeModal.sellUnits }}</label>
                 <input v-model.number="form.sellUnits" type="number" min="0" step="1" required />
               </div>
             </div>
             <div class="field">
-              <label>Undercut (opcional)</label>
+              <label>{{ messages.tradeModal.undercut }}</label>
               <select v-model.number="form.parentTradeId">
-                <option :value="null">Sem undercut</option>
+                <option :value="null">{{ messages.tradeModal.noUndercut }}</option>
                 <option
                   v-for="trade in trades"
                   :key="trade.id"
                   :value="trade.id"
                   :disabled="editingTradeId === trade.id"
                 >
-                  #{{ trade.id }} · {{ trade.item }} · taxas herdadas:
+                  #{{ trade.id }} Aú {{ trade.item }} Aú {{ messages.tradeModal.undercutFeesLabel }}
                   {{ formatGold(trade.cumulativeFees) }}
                 </option>
               </select>
               <p class="helper">
-                Selecione uma ordem para encadear um undercut e trazer as taxas acumuladas para o lucro real.
+                {{ messages.tradeModal.undercutHelp }}
               </p>
             </div>
             <div class="field">
-              <label>Duplicar ordens (quantidade)</label>
+              <label>{{ messages.tradeModal.duplicateLabel }}</label>
               <input
                 v-model.number="form.duplicationCount"
                 type="number"
@@ -160,71 +167,80 @@ const emit = defineEmits<{
                 :disabled="!!editingTradeId"
               />
               <p class="helper">
-                Cria copias independentes ao salvar a ordem. Ignorado ao editar. Limite de
-                {{ maxDuplications }} copias.
+                {{ t("tradeModal.duplicateHelp", { limit: maxDuplications }) }}
               </p>
             </div>
             <div class="field">
-              <label>Observacao</label>
+              <label>{{ messages.tradeModal.note }}</label>
               <textarea
                 v-model="form.note"
                 rows="2"
-                placeholder="Ex: relistado apos undercut, ajuste de preco, etc"
+                :placeholder="messages.tradeModal.notePlaceholder"
               />
             </div>
             <div class="actions">
               <div class="hint">
                 <p>
-                  Spread:
+                  {{ messages.tradeModal.summary.spread }}:
                   <strong>{{ formatGold(derived.spread) }}</strong>
-                  · Profit:
+                  Aú {{ messages.tradeModal.summary.profit }}:
                   <strong>{{ formatGold(derived.profit) }}</strong>
-                  · Real profit:
+                  Aú {{ messages.tradeModal.summary.realProfit }}:
                   <strong>{{ formatGold(derived.realProfit) }}</strong>
                 </p>
                 <p class="helper">
-                  Real profit considera todas as taxas herdadas do encadeamento.
+                  {{ messages.tradeModal.summary.hint }}
                 </p>
               </div>
               <button class="primary" type="submit" :disabled="saving">
                 {{
                   saving
-                    ? "Salvando..."
+                    ? messages.tradeModal.summary.saveLoading
                     : editingTradeId
-                      ? "Salvar edicao"
-                      : "Salvar ordem"
+                      ? messages.tradeModal.summary.saveEdit
+                      : messages.tradeModal.summary.saveNew
                 }}
               </button>
             </div>
           </form>
           <div class="metrics">
             <div class="metric">
-              <p>Spread</p>
+              <p>{{ messages.tradeModal.metrics.spread }}</p>
               <strong>{{ formatGold(derived.spread) }}</strong>
             </div>
             <div class="metric">
-              <p>Buy trade value</p>
+              <p>{{ messages.tradeModal.metrics.buyValue }}</p>
               <strong>{{ formatGold(derived.buyTradeValue) }}</strong>
               <span>
-                {{ formatUnits(form.buyUnits) }} un · fee {{ derived.buyFee * 100 }}%
+                {{
+                  t("tradeModal.metrics.buyFeeHint", {
+                    units: formatUnits(form.buyUnits),
+                    fee: (derived.buyFee * 100).toFixed(2),
+                  })
+                }}
               </span>
             </div>
             <div class="metric">
-              <p>Trade value</p>
+              <p>{{ messages.tradeModal.metrics.tradeValue }}</p>
               <strong>{{ formatGold(derived.tradeValue) }}</strong>
               <span>
-                {{ formatUnits(form.sellUnits) }} un · fee {{ derived.sellFee * 100 }}%
+                {{
+                  t("tradeModal.metrics.sellFeeHint", {
+                    units: formatUnits(form.sellUnits),
+                    fee: (derived.sellFee * 100).toFixed(2),
+                  })
+                }}
               </span>
             </div>
             <div class="metric">
-              <p>Total fees</p>
-              <strong>{{ derived.cumulativeFees ?? derived.totalFees }}</strong>
-              <span>Inclui compra + venda</span>
+              <p>{{ messages.tradeModal.metrics.totalFees }}</p>
+              <strong>{{ formatGold(derived.cumulativeFees ?? derived.totalFees) }}</strong>
+              <span>{{ messages.tradeModal.metrics.totalFeesHint }}</span>
             </div>
             <div class="metric">
-              <p>Profit</p>
+              <p>{{ messages.tradeModal.metrics.profit }}</p>
               <strong>{{ formatGold(derived.profit) }}</strong>
-              <span>Lucro bruto (antes das taxas)</span>
+              <span>{{ messages.tradeModal.metrics.profitHint }}</span>
             </div>
             <div
               class="metric highlight"
@@ -233,9 +249,9 @@ const emit = defineEmits<{
                 'is-positive': derived.realProfit >= 0,
               }"
             >
-              <p>Real profit</p>
+              <p>{{ messages.tradeModal.metrics.realProfit }}</p>
               <strong>{{ formatGold(derived.realProfit) }}</strong>
-              <span>Lucro liquido (taxas + herdadas)</span>
+              <span>{{ messages.tradeModal.metrics.realProfitHint }}</span>
             </div>
           </div>
         </div>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import { useI18n } from "~/composables/useI18n";
 import type { Trade } from "~/types/trade";
 
 const props = defineProps<{
@@ -32,20 +33,22 @@ const selection = computed({
   get: () => props.selectedListItem,
   set: (value: string) => emit("update:selectedListItem", value),
 });
+
+const { messages, locale, t } = useI18n();
 </script>
 
 <template>
   <section class="panel trades">
     <div class="panel__header">
       <div class="panel__header__title">
-        <p class="eyebrow">Ordens</p>
+        <p class="eyebrow">{{ messages.tradesPanel.eyebrow }}</p>
         <div class="panel__title-row">
-          <h2>Historico</h2>
+          <h2>{{ messages.tradesPanel.title }}</h2>
           <button
             class="panel__toggle"
             type="button"
             :aria-pressed="open"
-            :title="open ? 'Recolher historico' : 'Expandir historico'"
+            :title="open ? messages.tradesPanel.collapseTitle : messages.tradesPanel.expandTitle"
             @click="open = !open"
           >
             <svg
@@ -63,13 +66,13 @@ const selection = computed({
                 stroke-width="2"
               />
             </svg>
-            <span>{{ open ? "Esconder" : "Mostrar" }}</span>
+            <span>{{ open ? messages.common.hide : messages.common.show }}</span>
           </button>
         </div>
       </div>
       <div class="panel__actions">
         <select v-model="selection">
-          <option value="">Todos os itens</option>
+          <option value="">{{ messages.common.allItems }}</option>
           <option v-for="item in items" :key="item" :value="item">
             {{ item }}
           </option>
@@ -77,9 +80,11 @@ const selection = computed({
       </div>
     </div>
     <div v-if="open" class="panel__body">
-      <p v-if="loading">Carregando...</p>
-      <p v-else-if="!hasTrades">Nenhuma ordem cadastrada.</p>
-      <p v-else-if="filteredListTrades.length === 0">Nenhuma ordem para o filtro selecionado.</p>
+      <p v-if="loading">{{ messages.tradesPanel.loading }}</p>
+      <p v-else-if="!hasTrades">{{ messages.tradesPanel.empty }}</p>
+      <p v-else-if="filteredListTrades.length === 0">
+        {{ messages.tradesPanel.emptyFiltered }}
+      </p>
       <div v-else class="trade-list">
         <article
           v-for="trade in filteredListTrades"
@@ -89,57 +94,63 @@ const selection = computed({
           <header class="trade-card__header">
             <div>
               <p class="eyebrow">
-                #{{ trade.id }} · {{ trade.item }}
+                #{{ trade.id }} Aú {{ trade.item }}
               </p>
               <h3>{{ describeParent(trade) }}</h3>
             </div>
             <div class="card-actions">
               <button class="ghost" type="button" @click="emit('prefill-undercut', trade)">
-                Criar undercut
+                {{ messages.tradesPanel.actions.undercut }}
               </button>
               <button class="ghost" type="button" @click="emit('edit', trade)">
-                Editar
+                {{ messages.tradesPanel.actions.edit }}
               </button>
               <button class="danger" type="button" @click="emit('delete', trade.id)">
-                Deletar
+                {{ messages.tradesPanel.actions.delete }}
               </button>
             </div>
           </header>
           <div class="trade-card__grid">
             <div class="cell">
-              <p>
-                <span style="color: green">Bid</span> /
-                <span style="color: red">Ask</span>
-              </p>
+              <p>{{ messages.tradesPanel.card.bidAsk }}</p>
               <strong>
                 {{ formatGold(trade.bid) }} /
                 {{ formatGold(trade.ask) }}
               </strong>
-              <span>Spread: {{ formatGold(trade.spread) }}</span>
+              <span>{{ messages.tradesPanel.card.spread }}: {{ formatGold(trade.spread) }}</span>
             </div>
             <div class="cell">
-              <p>Buy order</p>
+              <p>{{ messages.tradesPanel.card.buyOrder }}</p>
               <strong>{{ formatGold(trade.buyTradeValue) }}</strong>
               <span>
-                {{ formatUnits(trade.buyUnits) }} un · fee {{ formatPercent(trade.buyFee) }}
+                {{
+                  t("tradesPanel.card.unitFee", {
+                    units: formatUnits(trade.buyUnits),
+                    fee: formatPercent(trade.buyFee),
+                  })
+                }}
               </span>
             </div>
             <div class="cell">
-              <p>Sell order</p>
+              <p>{{ messages.tradesPanel.card.sellOrder }}</p>
               <strong>{{ formatGold(trade.tradeValue) }}</strong>
               <span>
-                {{ formatUnits(trade.sellUnits) }} un · fee
-                {{ formatPercent(trade.sellFee) }}
+                {{
+                  t("tradesPanel.card.unitFee", {
+                    units: formatUnits(trade.sellUnits),
+                    fee: formatPercent(trade.sellFee),
+                  })
+                }}
               </span>
             </div>
             <div class="cell">
-              <p>Fees</p>
+              <p>{{ messages.tradesPanel.card.fees }}</p>
               <strong>{{ formatGold(trade.cumulativeFees) }}</strong>
-              <span>Herdadas: {{ formatGold(trade.inheritedFees) }}</span>
+              <span>{{ messages.tradesPanel.card.inherited }}: {{ formatGold(trade.inheritedFees) }}</span>
             </div>
             <div class="cell">
-              <p>Registrado</p>
-              <strong>{{ new Date(trade.createdAt).toLocaleString("pt-BR") }}</strong>
+              <p>{{ messages.tradesPanel.card.recorded }}</p>
+              <strong>{{ new Date(trade.createdAt).toLocaleString(locale === "pt" ? "pt-BR" : "en-US") }}</strong>
               <span v-if="trade.note">{{ trade.note }}</span>
             </div>
             <div
@@ -149,7 +160,7 @@ const selection = computed({
                 'is-positive': trade.realProfit >= 0,
               }"
             >
-              <p>Real Profit</p>
+              <p>{{ messages.tradesPanel.card.realProfit }}</p>
               <strong>{{ formatGold(trade.realProfit) }}</strong>
             </div>
           </div>

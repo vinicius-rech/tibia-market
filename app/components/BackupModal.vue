@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Ref } from "vue";
+import { useI18n } from "~/composables/useI18n";
 
 const props = defineProps<{
   open: boolean;
@@ -13,6 +14,8 @@ const emit = defineEmits<{
   (event: "import", payload: Event): void;
   (event: "reset"): void;
 }>();
+
+const { messages } = useI18n();
 
 function triggerImport() {
   props.importInput?.value?.click();
@@ -28,20 +31,20 @@ function triggerImport() {
     <div class="modal backup">
       <div class="modal__header">
         <div>
-          <p class="eyebrow">Backup</p>
-          <h3>Exportar ou importar dados</h3>
+          <p class="eyebrow">{{ messages.backup.eyebrow }}</p>
+          <h3>{{ messages.backup.title }}</h3>
         </div>
         <button class="ghost" type="button" @click="emit('close')">
-          Fechar
+          {{ messages.common.close }}
         </button>
       </div>
       <div class="modal__body">
-        <p class="helper">Exporte seu banco local para JSON ou importe um arquivo existente.</p>
+        <p class="helper">{{ messages.backup.helper }}</p>
         <button class="ghost" type="button" @click="emit('export')">
-          Exportar backup
+          {{ messages.backup.export }}
         </button>
         <button class="ghost" type="button" @click="triggerImport">
-          Importar backup
+          {{ messages.backup.import }}
         </button>
         <input
           :ref="importInput"
@@ -50,15 +53,17 @@ function triggerImport() {
           accept="application/json"
           @change="emit('import', $event)"
         />
-        <p class="helper error" v-if="props.errorMessage">Erro: {{ props.errorMessage }}</p>
-        <p class="helper success" v-else>Dados locais em uso.</p>
+        <p class="helper error" v-if="props.errorMessage">
+          {{ messages.backup.errorPrefix }}: {{ props.errorMessage }}
+        </p>
+        <p class="helper success" v-else>{{ messages.backup.success }}</p>
         <button class="danger" type="button" @click="emit('reset')">
-          Resetar banco local
+          {{ messages.backup.reset }}
         </button>
       </div>
       <div class="modal__footer">
         <button class="ghost" type="button" @click="emit('close')">
-          Fechar
+          {{ messages.common.close }}
         </button>
       </div>
     </div>

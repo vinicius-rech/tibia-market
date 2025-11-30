@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import { useI18n } from "~/composables/useI18n";
+
 const props = defineProps<{
   open: boolean;
   globalBuyFeePct: number;
@@ -21,6 +23,8 @@ const sellFee = computed({
   get: () => props.globalSellFeePct,
   set: (value: number) => emit("update:globalSellFeePct", value),
 });
+
+const { messages } = useI18n();
 </script>
 
 <template>
@@ -32,18 +36,20 @@ const sellFee = computed({
     <div class="modal">
       <div class="modal__header">
         <div>
-          <p class="eyebrow">Taxas globais</p>
-          <h3>Buy fee e Sell fee padr\u00f5es</h3>
+          <p class="eyebrow">{{ messages.fee.eyebrow }}</p>
+          <h3>{{ messages.fee.title }}</h3>
         </div>
-        <button class="ghost" type="button" @click="emit('close')">Fechar</button>
+        <button class="ghost" type="button" @click="emit('close')">
+          {{ messages.common.close }}
+        </button>
       </div>
       <div class="modal__body">
         <p class="helper">
-          Estas taxas ser\u00e3o usadas em todas as ordens (novas ou editadas).
+          {{ messages.fee.helper }}
         </p>
         <div class="field two-col">
           <div>
-            <label>Buy fee (%)</label>
+            <label>{{ messages.fee.buyLabel }}</label>
             <input
               v-model.number="buyFee"
               type="number"
@@ -53,7 +59,7 @@ const sellFee = computed({
             />
           </div>
           <div>
-            <label>Sell fee (%)</label>
+            <label>{{ messages.fee.sellLabel }}</label>
             <input
               v-model.number="sellFee"
               type="number"
@@ -64,13 +70,12 @@ const sellFee = computed({
           </div>
         </div>
         <p class="helper">
-          Recalculo dos campos considera taxas herdadas de undercut + estas taxas
-          globais.
+          {{ messages.fee.recalculation }}
         </p>
       </div>
       <div class="modal__footer">
         <button class="ghost" type="button" @click="emit('close')">
-          Fechar
+          {{ messages.common.close }}
         </button>
       </div>
     </div>

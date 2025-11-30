@@ -8,9 +8,11 @@ import FeeModal from "./components/FeeModal.vue";
 import TotalsPanel from "./components/TotalsPanel.vue";
 import TradeModal from "./components/TradeModal.vue";
 import TradesPanel from "./components/TradesPanel.vue";
+import { useI18n } from "./composables/useI18n";
 import type { ItemRow, Trade, TradeInput, TradeRow } from "./types/trade";
 
 const { $pglite } = useNuxtApp();
+const { t } = useI18n();
 
 const loading = ref(true);
 const saving = ref(false);
@@ -470,9 +472,7 @@ async function handleImportFile(event: Event) {
 async function resetDatabase() {
     error.value = null;
     if (typeof window !== "undefined") {
-        const confirmed = window.confirm(
-            "Tem certeza que deseja apagar todos os dados? Esta ação é irreversível.",
-        );
+        const confirmed = window.confirm(t("backup.resetConfirm"));
         if (!confirmed) return;
     }
 
@@ -918,7 +918,10 @@ function prefillUndercut(base: Trade) {
     form.buyUnits = base.buyUnits;
     form.sellUnits = base.sellUnits;
     form.parentTradeId = base.id;
-    form.note = `Undercut de #${base.id}`;
+    form.note = t("tradeHelpers.parentUndercut", {
+        id: base.id,
+        item: base.item,
+    });
     form.duplicationCount = 1;
     showTradeModal.value = true;
 }
@@ -940,9 +943,7 @@ async function deleteTrade(tradeId: number) {
     error.value = null;
     const confirmed =
         typeof window === "undefined" ||
-        window.confirm(
-            `Remover ordem #${tradeId}? Filhos vao perder o link de undercut.`,
-        );
+        window.confirm(t("tradeHelpers.confirmDelete", { id: tradeId }));
 
     if (!confirmed) return;
 
@@ -973,7 +974,7 @@ async function deleteTrade(tradeId: number) {
 
 function describeParent(trade: Trade) {
     if (!trade.parentTradeId) {
-        return "Primaria";
+        return t("tradeHelpers.parentPrimary");
     }
 
     const parent = trades.value.find(
@@ -981,8 +982,8 @@ function describeParent(trade: Trade) {
     );
 
     return parent
-        ? `Undercut de #${parent.id} (${parent.item})`
-        : "Undercut (referencia nao encontrada)";
+        ? t("tradeHelpers.parentUndercut", { id: parent.id, item: parent.item })
+        : t("tradeHelpers.parentMissing");
 }
 
 function formatGold(value: number) {
@@ -1116,3 +1117,4 @@ function formatUnits(value: number) {
     </div>
 </template>
 <style src="./assets/main.css"></style>
+
