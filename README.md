@@ -1,6 +1,6 @@
-![Tibia Market Desk logo](public/logo.png)
+![Tibia Artisan Studio logo](public/logo.png)
 
-# Tibia Market Desk
+# Tibia Artisan Studio
 
 Aplicação Nuxt 4 para registrar ordens de compra/venda e undercuts no Tibia, com métricas, gráficos rápidos e backup/restauração local via PGlite.
 
