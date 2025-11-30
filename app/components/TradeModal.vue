@@ -148,7 +148,7 @@ const { messages, t } = useI18n();
                   :value="trade.id"
                   :disabled="editingTradeId === trade.id"
                 >
-                  #{{ trade.id }} Aú {{ trade.item }} Aú {{ messages.tradeModal.undercutFeesLabel }}
+                  #{{ trade.id }} {{ trade.item }} {{ messages.tradeModal.undercutFeesLabel }}
                   {{ formatGold(trade.cumulativeFees) }}
                 </option>
               </select>
@@ -183,9 +183,9 @@ const { messages, t } = useI18n();
                 <p>
                   {{ messages.tradeModal.summary.spread }}:
                   <strong>{{ formatGold(derived.spread) }}</strong>
-                  Aú {{ messages.tradeModal.summary.profit }}:
+                   {{ messages.tradeModal.summary.profit }}:
                   <strong>{{ formatGold(derived.profit) }}</strong>
-                  Aú {{ messages.tradeModal.summary.realProfit }}:
+                   {{ messages.tradeModal.summary.realProfit }}:
                   <strong>{{ formatGold(derived.realProfit) }}</strong>
                 </p>
                 <p class="helper">

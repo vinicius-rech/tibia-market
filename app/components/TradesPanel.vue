@@ -94,7 +94,7 @@ const { messages, locale, t } = useI18n();
           <header class="trade-card__header">
             <div>
               <p class="eyebrow">
-                #{{ trade.id }} Aú {{ trade.item }}
+                #{{ trade.id }} {{ trade.item }}
               </p>
               <h3>{{ describeParent(trade) }}</h3>
             </div>
