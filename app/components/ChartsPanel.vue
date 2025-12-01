@@ -66,7 +66,18 @@ const { messages } = useI18n();
         </div>
       </div>
       <div class="panel__actions">
-        <select v-model="selection">
+        <label class="label-with-icon" for="chartsFilter">
+          <span>{{ messages.charts.filterLabel }}</span>
+          <span
+            class="info-icon"
+            role="img"
+            :title="messages.charts.filterHelp"
+            :aria-label="messages.charts.filterHelp"
+          >
+            ?
+          </span>
+        </label>
+        <select id="chartsFilter" v-model="selection" :aria-label="messages.charts.filterLabel">
           <option value="">{{ messages.common.allItems }}</option>
           <option v-for="item in items" :key="item" :value="item">
             {{ item }}
@@ -81,7 +92,17 @@ const { messages } = useI18n();
       <div v-else class="charts-grid">
         <article class="chart-card">
           <div class="chart-card__header">
-            <p>{{ messages.charts.cards.profit }}</p>
+            <p class="label-with-icon">
+              <span>{{ messages.charts.cards.profit }}</span>
+              <span
+                class="info-icon"
+                role="img"
+                :title="messages.charts.cardsHints.profit"
+                :aria-label="messages.charts.cardsHints.profit"
+              >
+                ?
+              </span>
+            </p>
             <strong>{{ formatGold(props.chartStats.profit.latest) }}</strong>
             <span
               :class="{
@@ -98,7 +119,17 @@ const { messages } = useI18n();
         </article>
         <article class="chart-card">
           <div class="chart-card__header">
-            <p>{{ messages.charts.cards.spread }}</p>
+            <p class="label-with-icon">
+              <span>{{ messages.charts.cards.spread }}</span>
+              <span
+                class="info-icon"
+                role="img"
+                :title="messages.charts.cardsHints.spread"
+                :aria-label="messages.charts.cardsHints.spread"
+              >
+                ?
+              </span>
+            </p>
             <strong>{{ formatGold(props.chartStats.spread.latest) }}</strong>
             <span
               :class="{
@@ -115,7 +146,17 @@ const { messages } = useI18n();
         </article>
         <article class="chart-card">
           <div class="chart-card__header">
-            <p>{{ messages.charts.cards.buyValue }}</p>
+            <p class="label-with-icon">
+              <span>{{ messages.charts.cards.buyValue }}</span>
+              <span
+                class="info-icon"
+                role="img"
+                :title="messages.charts.cardsHints.buyValue"
+                :aria-label="messages.charts.cardsHints.buyValue"
+              >
+                ?
+              </span>
+            </p>
             <strong>{{ formatGold(props.chartStats.buyValue.latest) }}</strong>
             <span
               :class="{
@@ -132,7 +173,17 @@ const { messages } = useI18n();
         </article>
         <article class="chart-card">
           <div class="chart-card__header">
-            <p>{{ messages.charts.cards.sellValue }}</p>
+            <p class="label-with-icon">
+              <span>{{ messages.charts.cards.sellValue }}</span>
+              <span
+                class="info-icon"
+                role="img"
+                :title="messages.charts.cardsHints.sellValue"
+                :aria-label="messages.charts.cardsHints.sellValue"
+              >
+                ?
+              </span>
+            </p>
             <strong>{{ formatGold(props.chartStats.sellValue.latest) }}</strong>
             <span
               :class="{
@@ -149,7 +200,17 @@ const { messages } = useI18n();
         </article>
         <article class="chart-card">
           <div class="chart-card__header">
-            <p>{{ messages.charts.cards.fees }}</p>
+            <p class="label-with-icon">
+              <span>{{ messages.charts.cards.fees }}</span>
+              <span
+                class="info-icon"
+                role="img"
+                :title="messages.charts.cardsHints.fees"
+                :aria-label="messages.charts.cardsHints.fees"
+              >
+                ?
+              </span>
+            </p>
             <strong>{{ formatGold(props.chartStats.fees.latest) }}</strong>
             <span
               :class="{
@@ -166,7 +227,17 @@ const { messages } = useI18n();
         </article>
         <article class="chart-card">
           <div class="chart-card__header">
-            <p>{{ messages.charts.cards.units }}</p>
+            <p class="label-with-icon">
+              <span>{{ messages.charts.cards.units }}</span>
+              <span
+                class="info-icon"
+                role="img"
+                :title="messages.charts.cardsHints.units"
+                :aria-label="messages.charts.cardsHints.units"
+              >
+                ?
+              </span>
+            </p>
             <strong>{{ formatUnits(props.chartStats.units.latest) }}</strong>
             <span
               :class="{

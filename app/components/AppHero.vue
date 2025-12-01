@@ -43,7 +43,9 @@ const activeLocale = computed(() =>
       </div>
       <div class="hero__actions">
         <div class="hero__filter">
-          <select id="globalFilter" v-model="globalFilter">
+          <label class="label-with-icon" for="globalFilter">
+          </label>
+          <select id="globalFilter" v-model="globalFilter" :aria-label="t('hero.filterLabel')">
             <option value="">{{ messages.common.allItems }}</option>
             <option v-for="item in items" :key="item" :value="item">
               {{ item }}

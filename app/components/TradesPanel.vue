@@ -71,7 +71,18 @@ const { messages, locale, t } = useI18n();
         </div>
       </div>
       <div class="panel__actions">
-        <select v-model="selection">
+        <label class="label-with-icon" for="tradesFilter">
+          <span>{{ messages.tradesPanel.filterLabel }}</span>
+          <span
+            class="info-icon"
+            role="img"
+            :title="messages.tradesPanel.filterHelp"
+            :aria-label="messages.tradesPanel.filterHelp"
+          >
+            ?
+          </span>
+        </label>
+        <select id="tradesFilter" v-model="selection" :aria-label="messages.tradesPanel.filterLabel">
           <option value="">{{ messages.common.allItems }}</option>
           <option v-for="item in items" :key="item" :value="item">
             {{ item }}
@@ -112,7 +123,17 @@ const { messages, locale, t } = useI18n();
           </header>
           <div class="trade-card__grid">
             <div class="cell">
-              <p>{{ messages.tradesPanel.card.bidAsk }}</p>
+              <p class="label-with-icon">
+                <span>{{ messages.tradesPanel.card.bidAsk }}</span>
+                <span
+                  class="info-icon"
+                  role="img"
+                  :title="messages.tradesPanel.cardHelp.bidAsk"
+                  :aria-label="messages.tradesPanel.cardHelp.bidAsk"
+                >
+                  ?
+                </span>
+              </p>
               <strong>
                 {{ formatGold(trade.bid) }} /
                 {{ formatGold(trade.ask) }}
@@ -120,7 +141,17 @@ const { messages, locale, t } = useI18n();
               <span>{{ messages.tradesPanel.card.spread }}: {{ formatGold(trade.spread) }}</span>
             </div>
             <div class="cell">
-              <p>{{ messages.tradesPanel.card.buyOrder }}</p>
+              <p class="label-with-icon">
+                <span>{{ messages.tradesPanel.card.buyOrder }}</span>
+                <span
+                  class="info-icon"
+                  role="img"
+                  :title="messages.tradesPanel.cardHelp.buyOrder"
+                  :aria-label="messages.tradesPanel.cardHelp.buyOrder"
+                >
+                  ?
+                </span>
+              </p>
               <strong>{{ formatGold(trade.buyTradeValue) }}</strong>
               <span>
                 {{
@@ -132,7 +163,17 @@ const { messages, locale, t } = useI18n();
               </span>
             </div>
             <div class="cell">
-              <p>{{ messages.tradesPanel.card.sellOrder }}</p>
+              <p class="label-with-icon">
+                <span>{{ messages.tradesPanel.card.sellOrder }}</span>
+                <span
+                  class="info-icon"
+                  role="img"
+                  :title="messages.tradesPanel.cardHelp.sellOrder"
+                  :aria-label="messages.tradesPanel.cardHelp.sellOrder"
+                >
+                  ?
+                </span>
+              </p>
               <strong>{{ formatGold(trade.tradeValue) }}</strong>
               <span>
                 {{
@@ -144,12 +185,32 @@ const { messages, locale, t } = useI18n();
               </span>
             </div>
             <div class="cell">
-              <p>{{ messages.tradesPanel.card.fees }}</p>
+              <p class="label-with-icon">
+                <span>{{ messages.tradesPanel.card.fees }}</span>
+                <span
+                  class="info-icon"
+                  role="img"
+                  :title="messages.tradesPanel.cardHelp.fees"
+                  :aria-label="messages.tradesPanel.cardHelp.fees"
+                >
+                  ?
+                </span>
+              </p>
               <strong>{{ formatGold(trade.cumulativeFees) }}</strong>
               <span>{{ messages.tradesPanel.card.inherited }}: {{ formatGold(trade.inheritedFees) }}</span>
             </div>
             <div class="cell">
-              <p>{{ messages.tradesPanel.card.recorded }}</p>
+              <p class="label-with-icon">
+                <span>{{ messages.tradesPanel.card.recorded }}</span>
+                <span
+                  class="info-icon"
+                  role="img"
+                  :title="messages.tradesPanel.cardHelp.recorded"
+                  :aria-label="messages.tradesPanel.cardHelp.recorded"
+                >
+                  ?
+                </span>
+              </p>
               <strong>{{ new Date(trade.createdAt).toLocaleString(locale === "pt" ? "pt-BR" : "en-US") }}</strong>
               <span v-if="trade.note">{{ trade.note }}</span>
             </div>
@@ -160,7 +221,17 @@ const { messages, locale, t } = useI18n();
                 'is-positive': trade.realProfit >= 0,
               }"
             >
-              <p>{{ messages.tradesPanel.card.realProfit }}</p>
+              <p class="label-with-icon">
+                <span>{{ messages.tradesPanel.card.realProfit }}</span>
+                <span
+                  class="info-icon"
+                  role="img"
+                  :title="messages.tradesPanel.cardHelp.realProfit"
+                  :aria-label="messages.tradesPanel.cardHelp.realProfit"
+                >
+                  ?
+                </span>
+              </p>
               <strong>{{ formatGold(trade.realProfit) }}</strong>
             </div>
           </div>

@@ -39,7 +39,17 @@ function triggerImport() {
         </button>
       </div>
       <div class="modal__body">
-        <p class="helper">{{ messages.backup.helper }}</p>
+        <p class="helper label-with-icon">
+          <span>{{ messages.backup.helper }}</span>
+          <span
+            class="info-icon"
+            role="img"
+            :title="messages.backup.helper"
+            :aria-label="messages.backup.helper"
+          >
+            ?
+          </span>
+        </p>
         <button class="ghost" type="button" @click="emit('export')">
           {{ messages.backup.export }}
         </button>

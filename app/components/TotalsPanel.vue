@@ -71,7 +71,18 @@ const { messages } = useI18n();
         </div>
       </div>
       <div class="panel__actions">
-        <select v-model="selection">
+        <label class="label-with-icon" for="totalsFilter">
+          <span>{{ messages.totals.filterLabel }}</span>
+          <span
+            class="info-icon"
+            role="img"
+            :title="messages.totals.filterHelp"
+            :aria-label="messages.totals.filterHelp"
+          >
+            ?
+          </span>
+        </label>
+        <select id="totalsFilter" v-model="selection" :aria-label="messages.totals.filterLabel">
           <option value="">{{ messages.common.allItems }}</option>
           <option v-for="item in items" :key="item" :value="item">
             {{ item }}
@@ -88,7 +99,17 @@ const { messages } = useI18n();
       </p>
       <div v-else class="totals-grid">
         <article class="total-card">
-          <p class="total-card__label">{{ messages.totals.value.label }}</p>
+          <p class="total-card__label label-with-icon">
+            <span>{{ messages.totals.value.label }}</span>
+            <span
+              class="info-icon"
+              role="img"
+              :title="messages.totals.value.meta"
+              :aria-label="messages.totals.value.meta"
+            >
+              ?
+            </span>
+          </p>
           <p class="total-card__value">
             {{ formatGold(props.totalsSnapshot.totalValue) }}
           </p>
@@ -97,7 +118,17 @@ const { messages } = useI18n();
           </p>
         </article>
         <article class="total-card">
-          <p class="total-card__label">{{ messages.totals.fees.label }}</p>
+          <p class="total-card__label label-with-icon">
+            <span>{{ messages.totals.fees.label }}</span>
+            <span
+              class="info-icon"
+              role="img"
+              :title="messages.totals.fees.meta"
+              :aria-label="messages.totals.fees.meta"
+            >
+              ?
+            </span>
+          </p>
           <p class="total-card__value">
             {{ formatGold(props.totalsSnapshot.totalFees) }}
           </p>
@@ -113,14 +144,34 @@ const { messages } = useI18n();
               : 'total-card--negative'
           "
         >
-          <p class="total-card__label">{{ messages.totals.realProfit.label }}</p>
+          <p class="total-card__label label-with-icon">
+            <span>{{ messages.totals.realProfit.label }}</span>
+            <span
+              class="info-icon"
+              role="img"
+              :title="messages.totals.realProfit.meta"
+              :aria-label="messages.totals.realProfit.meta"
+            >
+              ?
+            </span>
+          </p>
           <p class="total-card__value">
             {{ formatGold(props.totalsSnapshot.totalRealProfit) }}
           </p>
           <p class="total-card__meta">{{ messages.totals.realProfit.meta }}</p>
         </article>
         <article class="total-card total-card--neutral">
-          <p class="total-card__label">{{ messages.totals.undercuts.label }}</p>
+          <p class="total-card__label label-with-icon">
+            <span>{{ messages.totals.undercuts.label }}</span>
+            <span
+              class="info-icon"
+              role="img"
+              :title="messages.totals.undercuts.meta"
+              :aria-label="messages.totals.undercuts.meta"
+            >
+              ?
+            </span>
+          </p>
           <p class="total-card__value">
             {{ formatUnits(props.totalsSnapshot.undercuts) }}
           </p>
@@ -129,7 +180,17 @@ const { messages } = useI18n();
           </p>
         </article>
         <article class="total-card total-card--neutral">
-          <p class="total-card__label">{{ messages.totals.trades.label }}</p>
+          <p class="total-card__label label-with-icon">
+            <span>{{ messages.totals.trades.label }}</span>
+            <span
+              class="info-icon"
+              role="img"
+              :title="messages.totals.trades.meta"
+              :aria-label="messages.totals.trades.meta"
+            >
+              ?
+            </span>
+          </p>
           <p class="total-card__value">
             {{ formatUnits(props.totalsSnapshot.count) }}
           </p>

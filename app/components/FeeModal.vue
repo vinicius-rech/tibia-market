@@ -49,7 +49,17 @@ const { messages } = useI18n();
         </p>
         <div class="field two-col">
           <div>
-            <label>{{ messages.fee.buyLabel }}</label>
+            <label class="label-with-icon">
+              <span>{{ messages.fee.buyLabel }}</span>
+              <span
+                class="info-icon"
+                role="img"
+                :title="messages.fee.buyTooltip"
+                :aria-label="messages.fee.buyTooltip"
+              >
+                ?
+              </span>
+            </label>
             <input
               v-model.number="buyFee"
               type="number"
@@ -59,7 +69,17 @@ const { messages } = useI18n();
             />
           </div>
           <div>
-            <label>{{ messages.fee.sellLabel }}</label>
+            <label class="label-with-icon">
+              <span>{{ messages.fee.sellLabel }}</span>
+              <span
+                class="info-icon"
+                role="img"
+                :title="messages.fee.sellTooltip"
+                :aria-label="messages.fee.sellTooltip"
+              >
+                ?
+              </span>
+            </label>
             <input
               v-model.number="sellFee"
               type="number"

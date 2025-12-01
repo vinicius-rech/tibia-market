@@ -84,7 +84,17 @@ onBeforeUnmount(() => {
         <div class="grid">
           <form class="form" @submit.prevent="onSubmit">
             <div class="field">
-              <label for="item">{{ messages.tradeModal.itemLabel }}</label>
+              <label for="item" class="label-with-icon">
+                <span>{{ messages.tradeModal.itemLabel }}</span>
+                <span
+                  class="info-icon"
+                  role="img"
+                  :title="messages.tradeModal.fieldHelp.item"
+                  :aria-label="messages.tradeModal.fieldHelp.item"
+                >
+                  ?
+                </span>
+              </label>
               <div class="autocomplete">
                 <input
                   id="item"
@@ -134,26 +144,76 @@ onBeforeUnmount(() => {
             </div>
             <div class="field two-col">
               <div>
-                <label>{{ messages.tradeModal.bid }}</label>
+                <label class="label-with-icon">
+                  <span>{{ messages.tradeModal.bid }}</span>
+                  <span
+                    class="info-icon"
+                    role="img"
+                    :title="messages.tradeModal.fieldHelp.bid"
+                    :aria-label="messages.tradeModal.fieldHelp.bid"
+                  >
+                    ?
+                  </span>
+                </label>
                 <input v-model.number="form.bid" type="number" min="0" step="1" required />
               </div>
               <div>
-                <label>{{ messages.tradeModal.ask }}</label>
+                <label class="label-with-icon">
+                  <span>{{ messages.tradeModal.ask }}</span>
+                  <span
+                    class="info-icon"
+                    role="img"
+                    :title="messages.tradeModal.fieldHelp.ask"
+                    :aria-label="messages.tradeModal.fieldHelp.ask"
+                  >
+                    ?
+                  </span>
+                </label>
                 <input v-model.number="form.ask" type="number" min="0" step="1" required />
               </div>
             </div>
             <div class="field two-col">
               <div>
-                <label>{{ messages.tradeModal.buyUnits }}</label>
+                <label class="label-with-icon">
+                  <span>{{ messages.tradeModal.buyUnits }}</span>
+                  <span
+                    class="info-icon"
+                    role="img"
+                    :title="messages.tradeModal.fieldHelp.buyUnits"
+                    :aria-label="messages.tradeModal.fieldHelp.buyUnits"
+                  >
+                    ?
+                  </span>
+                </label>
                 <input v-model.number="form.buyUnits" type="number" min="0" step="1" required />
               </div>
               <div>
-                <label>{{ messages.tradeModal.sellUnits }}</label>
+                <label class="label-with-icon">
+                  <span>{{ messages.tradeModal.sellUnits }}</span>
+                  <span
+                    class="info-icon"
+                    role="img"
+                    :title="messages.tradeModal.fieldHelp.sellUnits"
+                    :aria-label="messages.tradeModal.fieldHelp.sellUnits"
+                  >
+                    ?
+                  </span>
+                </label>
                 <input v-model.number="form.sellUnits" type="number" min="0" step="1" required />
               </div>
             </div>
             <div class="field">
-              <label>{{ messages.tradeModal.undercut }}</label>
+              <label class="label-with-icon">
+                <span>{{ messages.tradeModal.undercut }}</span>
+                <span
+                  class="info-icon"
+                  role="img"
+                  :title="messages.tradeModal.fieldHelp.undercut"
+                  :aria-label="messages.tradeModal.fieldHelp.undercut"
+                >
+                  ?
+                </span>
+              </label>
               <select v-model.number="form.parentTradeId">
                 <option :value="null">{{ messages.tradeModal.noUndercut }}</option>
                 <option
@@ -171,7 +231,17 @@ onBeforeUnmount(() => {
               </p>
             </div>
             <div class="field">
-              <label>{{ messages.tradeModal.duplicateLabel }}</label>
+              <label class="label-with-icon">
+                <span>{{ messages.tradeModal.duplicateLabel }}</span>
+                <span
+                  class="info-icon"
+                  role="img"
+                  :title="messages.tradeModal.fieldHelp.duplicate"
+                  :aria-label="messages.tradeModal.fieldHelp.duplicate"
+                >
+                  ?
+                </span>
+              </label>
               <input
                 v-model.number="form.duplicationCount"
                 type="number"
@@ -185,7 +255,17 @@ onBeforeUnmount(() => {
               </p>
             </div>
             <div class="field">
-              <label>{{ messages.tradeModal.note }}</label>
+              <label class="label-with-icon">
+                <span>{{ messages.tradeModal.note }}</span>
+                <span
+                  class="info-icon"
+                  role="img"
+                  :title="messages.tradeModal.fieldHelp.note"
+                  :aria-label="messages.tradeModal.fieldHelp.note"
+                >
+                  ?
+                </span>
+              </label>
               <textarea
                 v-model="form.note"
                 rows="2"
@@ -195,11 +275,43 @@ onBeforeUnmount(() => {
             <div class="actions">
               <div class="hint">
                 <p>
-                  {{ messages.tradeModal.summary.spread }}:
+                  <span class="label-with-icon">
+                    <span>{{ messages.tradeModal.summary.spread }}:</span>
+                    <span
+                      class="info-icon"
+                      role="img"
+                      :title="messages.tradeModal.summary.tooltips.spread"
+                      :aria-label="messages.tradeModal.summary.tooltips.spread"
+                    >
+                      ?
+                    </span>
+                  </span>
                   <strong>{{ formatGold(derived.spread) }}</strong>
-                   {{ messages.tradeModal.summary.profit }}:
+                  &nbsp;
+                  <span class="label-with-icon">
+                    <span>{{ messages.tradeModal.summary.profit }}:</span>
+                    <span
+                      class="info-icon"
+                      role="img"
+                      :title="messages.tradeModal.summary.tooltips.profit"
+                      :aria-label="messages.tradeModal.summary.tooltips.profit"
+                    >
+                      ?
+                    </span>
+                  </span>
                   <strong>{{ formatGold(derived.profit) }}</strong>
-                   {{ messages.tradeModal.summary.realProfit }}:
+                  &nbsp;
+                  <span class="label-with-icon">
+                    <span>{{ messages.tradeModal.summary.realProfit }}:</span>
+                    <span
+                      class="info-icon"
+                      role="img"
+                      :title="messages.tradeModal.summary.tooltips.realProfit"
+                      :aria-label="messages.tradeModal.summary.tooltips.realProfit"
+                    >
+                      ?
+                    </span>
+                  </span>
                   <strong>{{ formatGold(derived.realProfit) }}</strong>
                 </p>
                 <p class="helper">
@@ -219,11 +331,42 @@ onBeforeUnmount(() => {
           </form>
           <div class="metrics">
             <div class="metric">
-              <p>{{ messages.tradeModal.metrics.spread }}</p>
+              <p class="label-with-icon">
+                <span>{{ messages.tradeModal.metrics.spread }}</span>
+                <span
+                  class="info-icon"
+                  role="img"
+                  :title="messages.tradeModal.metrics.spreadHint"
+                  :aria-label="messages.tradeModal.metrics.spreadHint"
+                >
+                  ?
+                </span>
+              </p>
               <strong>{{ formatGold(derived.spread) }}</strong>
+              <span>{{ messages.tradeModal.metrics.spreadHint }}</span>
             </div>
             <div class="metric">
-              <p>{{ messages.tradeModal.metrics.buyValue }}</p>
+              <p class="label-with-icon">
+                <span>{{ messages.tradeModal.metrics.buyValue }}</span>
+                <span
+                  class="info-icon"
+                  role="img"
+                  :title="
+                    t('tradeModal.metrics.buyFeeHint', {
+                      units: formatUnits(form.buyUnits),
+                      fee: (derived.buyFee * 100).toFixed(2),
+                    })
+                  "
+                  :aria-label="
+                    t('tradeModal.metrics.buyFeeHint', {
+                      units: formatUnits(form.buyUnits),
+                      fee: (derived.buyFee * 100).toFixed(2),
+                    })
+                  "
+                >
+                  ?
+                </span>
+              </p>
               <strong>{{ formatGold(derived.buyTradeValue) }}</strong>
               <span>
                 {{
@@ -235,7 +378,27 @@ onBeforeUnmount(() => {
               </span>
             </div>
             <div class="metric">
-              <p>{{ messages.tradeModal.metrics.tradeValue }}</p>
+              <p class="label-with-icon">
+                <span>{{ messages.tradeModal.metrics.tradeValue }}</span>
+                <span
+                  class="info-icon"
+                  role="img"
+                  :title="
+                    t('tradeModal.metrics.sellFeeHint', {
+                      units: formatUnits(form.sellUnits),
+                      fee: (derived.sellFee * 100).toFixed(2),
+                    })
+                  "
+                  :aria-label="
+                    t('tradeModal.metrics.sellFeeHint', {
+                      units: formatUnits(form.sellUnits),
+                      fee: (derived.sellFee * 100).toFixed(2),
+                    })
+                  "
+                >
+                  ?
+                </span>
+              </p>
               <strong>{{ formatGold(derived.tradeValue) }}</strong>
               <span>
                 {{
@@ -247,12 +410,32 @@ onBeforeUnmount(() => {
               </span>
             </div>
             <div class="metric">
-              <p>{{ messages.tradeModal.metrics.totalFees }}</p>
+              <p class="label-with-icon">
+                <span>{{ messages.tradeModal.metrics.totalFees }}</span>
+                <span
+                  class="info-icon"
+                  role="img"
+                  :title="messages.tradeModal.metrics.totalFeesHint"
+                  :aria-label="messages.tradeModal.metrics.totalFeesHint"
+                >
+                  ?
+                </span>
+              </p>
               <strong>{{ formatGold(derived.cumulativeFees ?? derived.totalFees) }}</strong>
               <span>{{ messages.tradeModal.metrics.totalFeesHint }}</span>
             </div>
             <div class="metric">
-              <p>{{ messages.tradeModal.metrics.profit }}</p>
+              <p class="label-with-icon">
+                <span>{{ messages.tradeModal.metrics.profit }}</span>
+                <span
+                  class="info-icon"
+                  role="img"
+                  :title="messages.tradeModal.metrics.profitHint"
+                  :aria-label="messages.tradeModal.metrics.profitHint"
+                >
+                  ?
+                </span>
+              </p>
               <strong>{{ formatGold(derived.profit) }}</strong>
               <span>{{ messages.tradeModal.metrics.profitHint }}</span>
             </div>
@@ -263,7 +446,17 @@ onBeforeUnmount(() => {
                 'is-positive': derived.realProfit >= 0,
               }"
             >
-              <p>{{ messages.tradeModal.metrics.realProfit }}</p>
+              <p class="label-with-icon">
+                <span>{{ messages.tradeModal.metrics.realProfit }}</span>
+                <span
+                  class="info-icon"
+                  role="img"
+                  :title="messages.tradeModal.metrics.realProfitHint"
+                  :aria-label="messages.tradeModal.metrics.realProfitHint"
+                >
+                  ?
+                </span>
+              </p>
               <strong>{{ formatGold(derived.realProfit) }}</strong>
               <span>{{ messages.tradeModal.metrics.realProfitHint }}</span>
             </div>
